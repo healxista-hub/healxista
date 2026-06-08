@@ -1,0 +1,251 @@
+import db from '../db.js';
+
+// Auto-migrate: ensure all critical tables & seed data exist before starting
+export async function runMigrations() {
+    try {
+        console.log('🚀 Starting database migration and repair...');
+
+        // 1. Repair service_providers (Add missing columns)
+        console.log('🚀 Verifying service_providers columns...');
+        await db.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='service_providers' AND column_name='is_verified') THEN
+                    ALTER TABLE service_providers ADD COLUMN is_verified BOOLEAN DEFAULT FALSE;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='service_providers' AND column_name='overall_rating') THEN
+                    ALTER TABLE service_providers ADD COLUMN overall_rating DECIMAL(3, 2) DEFAULT 0.0;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='service_providers' AND column_name='status') THEN
+                    ALTER TABLE service_providers ADD COLUMN status VARCHAR(20) DEFAULT 'Active';
+                END IF;
+            END $$;
+        `);
+        console.log('✅ service_providers columns verified');
+
+        // 2. Repair contact_messages (Add missing columns)
+        console.log('🚀 Verifying contact_messages columns...');
+        await db.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='contact_messages' AND column_name='first_name') THEN
+                    ALTER TABLE contact_messages ADD COLUMN first_name VARCHAR(100);
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='contact_messages' AND column_name='last_name') THEN
+                    ALTER TABLE contact_messages ADD COLUMN last_name VARCHAR(100);
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='contact_messages' AND column_name='phone') THEN
+                    ALTER TABLE contact_messages ADD COLUMN phone VARCHAR(20);
+                END IF;
+            END $$;
+        `);
+        console.log('✅ contact_messages columns verified');
+
+        // 2.2 Repair payments (Add missing columns for manual payment flow)
+        console.log('🚀 Verifying payments columns...');
+        await db.query(`
+            DO $$ 
+            BEGIN 
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='payments' AND column_name='payer_name') THEN
+                    ALTER TABLE payments ADD COLUMN payer_name VARCHAR(255);
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='payments' AND column_name='payer_mobile') THEN
+                    ALTER TABLE payments ADD COLUMN payer_mobile VARCHAR(20);
+                END IF;
+            END $$;
+        `);
+        console.log('✅ payments columns verified');
+
+        // 2.5 Ensure Unique Constraints for Seed Data
+        console.log('🚀 Verifying constraints for seed data...');
+        try {
+            await db.query(`
+                DO $$ 
+                BEGIN 
+                    -- Roles Unique Constraint
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE table_name='roles' AND constraint_type='UNIQUE' AND constraint_name='roles_name_key') THEN
+                        ALTER TABLE roles ADD CONSTRAINT roles_name_key UNIQUE (name);
+                    END IF;
+                    -- Services Unique Constraint
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE table_name='services' AND constraint_type='UNIQUE' AND constraint_name='services_name_key') THEN
+                        ALTER TABLE services ADD CONSTRAINT services_name_key UNIQUE (name);
+                    END IF;
+                END $$;
+            `);
+        } catch (constraintErr) {
+            console.warn('⚠️ Constraint verification warning:', constraintErr.message);
+        }
+
+        // 3. Create missing tables
+        console.log('🚀 Ensuring support & system tables...');
+        
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS lab_tests (
+                lab_id SERIAL PRIMARY KEY,
+                provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+                lab_name VARCHAR(255),
+                accreditation VARCHAR(255),
+                home_sample_collection BOOLEAN DEFAULT false
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id SERIAL PRIMARY KEY,
+                booking_id INTEGER REFERENCES bookings(booking_id) ON DELETE CASCADE,
+                sender_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+                message TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS quick_bookings (
+                id SERIAL PRIMARY KEY,
+                service_type VARCHAR(50),
+                name VARCHAR(100),
+                phone VARCHAR(20),
+                location TEXT,
+                destination TEXT,
+                details TEXT,
+                status VARCHAR(20) DEFAULT 'Pending',
+                status_note TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS activity_logs (
+                log_id SERIAL PRIMARY KEY,
+                account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+                target_role VARCHAR(50),
+                action_type VARCHAR(100),
+                title VARCHAR(255),
+                description TEXT,
+                related_id INTEGER,
+                status_theme VARCHAR(20),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS reviews (
+                review_id SERIAL PRIMARY KEY,
+                booking_id INTEGER REFERENCES bookings(booking_id) ON DELETE CASCADE,
+                reviewer_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+                reviewee_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+                rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+                comment TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS verification_requests (
+                request_id SERIAL PRIMARY KEY,
+                provider_id INTEGER REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+                document_type VARCHAR(100),
+                document_url TEXT,
+                status VARCHAR(20) DEFAULT 'Pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS products (
+                product_id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                manufacturer VARCHAR(255),
+                base_price DECIMAL(10, 2) DEFAULT 0.00,
+                is_prescription_required BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS inventory (
+                inventory_id SERIAL PRIMARY KEY,
+                store_id INTEGER REFERENCES medicine_stores(store_id) ON DELETE CASCADE,
+                product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+                stock_level INTEGER DEFAULT 0,
+                store_price DECIMAL(10, 2) DEFAULT 0.00,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS residents (
+                resident_id SERIAL PRIMARY KEY,
+                provider_id INTEGER REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                age INTEGER,
+                room_number VARCHAR(50),
+                condition VARCHAR(50), -- 'Stable', 'Needs Assistance', 'Critical'
+                emergency_contact TEXT,
+                photo_url TEXT,
+                document_url TEXT,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log('✅ All system tables ready');
+
+        // 4. Seed Data (Idempotent)
+        const requiredRoles = ['Admin', 'Patient', 'Doctor', 'Driver', 'Medicine Store', 'Physiotherapy', 'Old Age Home', 'Lab Test'];
+        for (const role of requiredRoles) {
+            await db.query(`INSERT INTO roles (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`, [role]);
+        }
+
+        const services = [
+            ['Doctor Appointment', 'Consultation with a verified doctor', 500.00],
+            ['Ambulance Ride', 'Emergency medical transportation', 1500.00],
+            ['Physiotherapy Session', 'Professional physical therapy session', 800.00],
+            ['Medicine Order', 'Pharmacy order and delivery', 0.00],
+            ['Old Age Home Inquiry', 'Booking inquiry for resident placement', 0.00],
+            ['Lab Test Booking', 'Home sample collection and lab diagnostics', 0.00],
+        ];
+        for (const [name, description, base_price] of services) {
+            const check = await db.query('SELECT 1 FROM services WHERE name = $1', [name]);
+            if (check.rows.length === 0) {
+                await db.query(`INSERT INTO services (name, description, base_price) VALUES ($1, $2, $3)`, [name, description, base_price]);
+            }
+        }
+        console.log('✅ Seed data verified');
+
+        // 5. Build Indices
+        await db.query(`
+            CREATE INDEX IF NOT EXISTS idx_accounts_email ON accounts(email);
+            CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
+            CREATE INDEX IF NOT EXISTS idx_service_providers_verified ON service_providers(is_verified);
+            CREATE INDEX IF NOT EXISTS idx_service_providers_online ON service_providers(is_online);
+        `);
+        console.log('✅ Performance indices ready');
+
+        console.log('🎉 Migration run complete!');
+    } catch (err) {
+        console.error('❌ Migration error:', err.message);
+        throw err;
+    }
+}
+// Allow running directly
+if (process.argv[1] && process.argv[1].endsWith('migrate.js')) {
+    runMigrations().catch(err => {
+        console.error('Fatal migration error:', err);
+        process.exit(1);
+    });
+}

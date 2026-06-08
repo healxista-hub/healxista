@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 346.8 77.2% 49.8%; /* Modern Red */
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 221.2 83.2% 53.3%; /* Modern Blue */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+    --brand-gradient: linear-gradient(135deg, hsl(346.8 77.2% 49.8%) 0%, hsl(221.2 83.2% 53.3%) 100%);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 346.8 77.2% 49.8%;
+    --primary-foreground: 355.7 100% 97.3%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 346.8 77.2% 49.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-feature-settings: "rlig" 1, "calt" 1;
+    overflow-x: hidden;
+    width: 100%;
+    top: 0px !important; /* Override Google Translate banner shift */
+  }
+
+  /* Language specific fonts applied automatically by Google Translate */
+  html[lang="hi"] body,
+  html.translated-ltr[lang="hi"] body {
+    font-family: 'Noto Sans Devanagari', sans-serif !important;
+  }
+  html[lang="bn"] body,
+  html.translated-ltr[lang="bn"] body {
+    font-family: 'Noto Sans Bengali', sans-serif !important;
+  }
+
+  /* Hide Google Translate Default UI (Aggressive) */
+  .goog-te-banner-frame,
+  .goog-te-banner-frame.skiptranslate,
+  .goog-te-gadget-icon,
+  #google_translate_element,
+  .skiptranslate > iframe,
+  .VIpgJd-ZVi9od-ORHb-OEVmcd,
+  .VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+  #goog-gt-tt,
+  .goog-te-balloon-frame {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+  }
+  body {
+    top: 0px !important; 
+    position: static !important;
+  }
+  .goog-tooltip,
+  .goog-tooltip:hover {
+    display: none !important;
+  }
+  .goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl;
+  }
+
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .brand-text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#E11D48] to-[#2563EB];
+  }
+
+  .brand-bg-gradient {
+    background: var(--brand-gradient);
+  }
+}

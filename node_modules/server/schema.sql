@@ -1,0 +1,310 @@
+-- Healxista Core Database Schema (Reconstructed & Optimized)
+
+-- 1. Roles
+CREATE TABLE IF NOT EXISTS roles (
+    role_id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- 2. Accounts
+CREATE TABLE IF NOT EXISTS accounts (
+    account_id SERIAL PRIMARY KEY,
+    custom_id VARCHAR(50) UNIQUE,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id INTEGER REFERENCES roles(role_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL
+);
+
+-- 3. Profiles
+CREATE TABLE IF NOT EXISTS profiles (
+    profile_id SERIAL PRIMARY KEY,
+    account_id INTEGER UNIQUE REFERENCES accounts(account_id) ON DELETE CASCADE,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    gender VARCHAR(20),
+    date_of_birth DATE,
+    mobile VARCHAR(20),
+    blood_group VARCHAR(10),
+    profile_image_url TEXT,
+    document_url TEXT,
+    bio TEXT,
+    is_sharing_location BOOLEAN DEFAULT FALSE,
+    last_latitude DECIMAL(10, 8),
+    last_longitude DECIMAL(11, 8),
+    cover_image_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Addresses
+CREATE TABLE IF NOT EXISTS addresses (
+    address_id SERIAL PRIMARY KEY,
+    account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    street TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    zip_code VARCHAR(20),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. Service Providers
+CREATE TABLE IF NOT EXISTS service_providers (
+    provider_id SERIAL PRIMARY KEY,
+    account_id INTEGER UNIQUE REFERENCES accounts(account_id) ON DELETE CASCADE,
+    provider_type VARCHAR(50) NOT NULL,
+    license_number VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'Active',
+    is_verified BOOLEAN DEFAULT FALSE,
+    overall_rating DECIMAL(3, 2) DEFAULT 0.0,
+    is_online BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Specialized Tables
+CREATE TABLE IF NOT EXISTS doctors (
+    doctor_id SERIAL PRIMARY KEY,
+    provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    specialization VARCHAR(255),
+    experience_years INTEGER,
+    consultation_fee DECIMAL(10, 2)
+);
+
+CREATE TABLE IF NOT EXISTS physiotherapists (
+    physio_id SERIAL PRIMARY KEY,
+    provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    specialization VARCHAR(255),
+    experience_years INTEGER,
+    consultation_fee DECIMAL(10, 2)
+);
+
+CREATE TABLE IF NOT EXISTS drivers (
+    driver_id SERIAL PRIMARY KEY,
+    provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    license_number VARCHAR(100),
+    vehicle_number VARCHAR(50),
+    vehicle_type VARCHAR(50),
+    experience_years INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS medicine_stores (
+    store_id SERIAL PRIMARY KEY,
+    provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    owner_name VARCHAR(255),
+    opening_hours TEXT
+);
+
+CREATE TABLE IF NOT EXISTS old_age_homes (
+    home_id SERIAL PRIMARY KEY,
+    provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    capacity INTEGER,
+    facilities_description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS residents (
+    resident_id SERIAL PRIMARY KEY,
+    provider_id INTEGER REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    age INTEGER,
+    room_number VARCHAR(50),
+    condition VARCHAR(50), -- 'Stable', 'Needs Assistance', 'Critical'
+    emergency_contact TEXT,
+    photo_url TEXT,
+    document_url TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS lab_tests (
+    lab_id SERIAL PRIMARY KEY,
+    provider_id INTEGER UNIQUE REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    lab_name VARCHAR(255),
+    accreditation VARCHAR(255),
+    home_sample_collection BOOLEAN DEFAULT FALSE
+);
+
+-- 7. Services
+CREATE TABLE IF NOT EXISTS services (
+    service_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    base_price DECIMAL(10, 2) DEFAULT 0.00
+);
+
+-- 8. Bookings
+CREATE TABLE IF NOT EXISTS bookings (
+    booking_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES accounts(account_id) ON DELETE SET NULL,
+    provider_id INTEGER REFERENCES service_providers(provider_id) ON DELETE SET NULL,
+    service_id INTEGER REFERENCES services(service_id) ON DELETE SET NULL,
+    booking_type VARCHAR(50), -- 'Ride', 'Appointment', 'Inquiry', etc.
+    scheduled_at TIMESTAMP,
+    patient_name VARCHAR(255),
+    contact_number VARCHAR(20),
+    pickup_location TEXT,
+    drop_location TEXT,
+    emergency_level VARCHAR(20),
+    additional_notes TEXT,
+    total_amount DECIMAL(10, 2),
+    status VARCHAR(50) DEFAULT 'Pending',
+    user_document TEXT, -- file path
+    provider_document TEXT, -- file path (report)
+    slot_number VARCHAR(50),
+    consultation_time VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 9. Payments
+CREATE TABLE IF NOT EXISTS payments (
+    payment_id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(booking_id) ON DELETE CASCADE,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_status VARCHAR(50) DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 10. Communication & Logs
+CREATE TABLE IF NOT EXISTS messages (
+    message_id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(booking_id) ON DELETE CASCADE,
+    sender_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS activity_logs (
+    log_id SERIAL PRIMARY KEY,
+    account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    target_role VARCHAR(50), -- 'Admin', 'Patient', 'All'
+    action_type VARCHAR(100),
+    title VARCHAR(255),
+    description TEXT,
+    related_id INTEGER,
+    status_theme VARCHAR(20), -- 'success', 'info', 'warning', 'active'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. Documents
+CREATE TABLE IF NOT EXISTS documents (
+    document_id SERIAL PRIMARY KEY,
+    uploader_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    file_path TEXT NOT NULL,
+    file_type VARCHAR(100),
+    file_size INTEGER,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS document_shares (
+    share_id SERIAL PRIMARY KEY,
+    document_id INTEGER REFERENCES documents(document_id) ON DELETE CASCADE,
+    shared_with_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    shared_by_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    shared_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(document_id, shared_with_id)
+);
+
+-- 12. Public Interaction
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    subject VARCHAR(255),
+    message TEXT,
+    status VARCHAR(50) DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. Junctions
+CREATE TABLE IF NOT EXISTS user_roles (
+    id SERIAL PRIMARY KEY,
+    account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    role_id INTEGER REFERENCES roles(role_id) ON DELETE CASCADE,
+    UNIQUE(account_id, role_id)
+);
+
+-- 14. Support & Feedback
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    account_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id SERIAL PRIMARY KEY,
+    booking_id INTEGER REFERENCES bookings(booking_id) ON DELETE CASCADE,
+    reviewer_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    reviewee_id INTEGER REFERENCES accounts(account_id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS verification_requests (
+    request_id SERIAL PRIMARY KEY,
+    provider_id INTEGER REFERENCES service_providers(provider_id) ON DELETE CASCADE,
+    document_type VARCHAR(100),
+    document_url TEXT,
+    status VARCHAR(20) DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. Inventory System
+CREATE TABLE IF NOT EXISTS products (
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    manufacturer VARCHAR(255),
+    base_price DECIMAL(10, 2) DEFAULT 0.00,
+    is_prescription_required BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS inventory (
+    inventory_id SERIAL PRIMARY KEY,
+    store_id INTEGER REFERENCES medicine_stores(store_id) ON DELETE CASCADE,
+    product_id INTEGER REFERENCES products(product_id) ON DELETE CASCADE,
+    stock_level INTEGER DEFAULT 0,
+    store_price DECIMAL(10, 2) DEFAULT 0.00,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 16. Quick Bookings
+CREATE TABLE IF NOT EXISTS quick_bookings (
+    id SERIAL PRIMARY KEY,
+    service_type VARCHAR(50),
+    name VARCHAR(100),
+    phone VARCHAR(20),
+    location TEXT,
+    destination TEXT,
+    details TEXT,
+    status VARCHAR(20) DEFAULT 'Pending',
+    status_note TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 17. Seed Data
+INSERT INTO roles (name) VALUES 
+('Admin'), ('Patient'), ('Doctor'), ('Driver'), 
+('Medicine Store'), ('Physiotherapy'), ('Old Age Home'), ('Lab Test')
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO services (name, description, base_price) VALUES 
+('Doctor Appointment', 'Consultation with a verified doctor', 500.00),
+('Ambulance Ride', 'Emergency medical transportation', 1500.00),
+('Physiotherapy Session', 'Professional physical therapy session', 800.00),
+('Medicine Order', 'Pharmacy order and delivery', 0.00),
+('Old Age Home Inquiry', 'Booking inquiry for resident placement', 0.00),
+('Lab Test Booking', 'Home sample collection and lab diagnostics', 0.00)
+ON CONFLICT (name) DO NOTHING;
