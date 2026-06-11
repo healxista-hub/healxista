@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import db from '../db.js';
 import { logActivity } from '../utils/activityLogger.js';
 import { formatName } from '../utils/nameFormatter.js';
+import { verifyUser } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET;
@@ -25,6 +26,8 @@ const getRoleIdByName = async (name) => {
 // Map role string to a standardized Role table name
 const standardizeRole = (role) => {
     switch (role?.toLowerCase()) {
+        case 'super_admin':
+        case 'super admin': return 'Super Admin';
         case 'admin': return 'Admin';
         case 'patient':
         case 'user': return 'Patient';
@@ -215,14 +218,17 @@ router.post('/login', authLimiter, [
         return res.status(400).json({ message: 'Valid email and password required.' });
     }
 
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     try {
         const result = await db.query(
-            `SELECT a.*, r.name as role_name, p.first_name, p.last_name, p.profile_image_url, p.gender, p.is_sharing_location 
+            `SELECT a.*, r.name as role_name, p.first_name, p.last_name, p.profile_image_url, p.gender, p.is_sharing_location,
+                    d.vehicle_number 
              FROM accounts a 
              JOIN roles r ON a.role_id = r.role_id 
              LEFT JOIN profiles p ON a.account_id = p.account_id 
+             LEFT JOIN service_providers sp ON a.account_id = sp.account_id
+             LEFT JOIN drivers d ON sp.provider_id = d.provider_id
              WHERE a.email = $1 AND a.deleted_at IS NULL`,
             [email]
         );
@@ -231,6 +237,18 @@ router.post('/login', authLimiter, [
 
         if (!account) {
             return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        // Restrict login to the designated role portal
+        if (role) {
+            const expectedRole = standardizeRole(role);
+            const actualRole = standardizeRole(account.role_name);
+
+            if (expectedRole !== actualRole) {
+                return res.status(403).json({ 
+                    message: `Unauthorized access: You are registered as a ${actualRole}. Please use the correct login portal.` 
+                });
+            }
         }
 
         const isMatch = await bcrypt.compare(password, account.password);
@@ -261,7 +279,8 @@ router.post('/login', authLimiter, [
                 role: account.role_name,
                 customId: account.custom_id,
                 profilePicture: account.profile_image_url,
-                isSharingLocation: account.is_sharing_location
+                isSharingLocation: account.is_sharing_location,
+                vehicleNumber: account.vehicle_number
             } 
         });
     } catch (error) {
@@ -274,6 +293,42 @@ router.post('/login', authLimiter, [
 router.post('/logout', (req, res) => {
     res.clearCookie('token', { path: '/' });
     res.json({ message: 'Logged out successfully' });
+});
+
+// Change Password
+router.put('/change-password', verifyUser, [
+    body('currentPassword').exists(),
+    body('newPassword').isLength({ min: 6 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Validation error. New password must be at least 6 characters.', errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const accountId = req.user.id;
+
+    try {
+        const result = await db.query('SELECT password FROM accounts WHERE account_id = $1', [accountId]);
+        const account = result.rows[0];
+
+        if (!account) {
+            return res.status(404).json({ message: 'Account not found' });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, account.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Incorrect current password' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await db.query('UPDATE accounts SET password = $1 WHERE account_id = $2', [hashedPassword, accountId]);
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Change Password Error:', error);
+        res.status(500).json({ message: 'Server error during password change' });
+    }
 });
 
 export default router;

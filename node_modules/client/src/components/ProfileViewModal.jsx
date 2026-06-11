@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, FileText, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 // Helper to generate a consistent avatar color based on name
 const getAvatarColor = (name) => {
@@ -17,7 +18,26 @@ const getAvatarColor = (name) => {
 };
 
 const ProfileViewModal = ({ isOpen, onClose, profile, title = "Profile Details", onBookNow }) => {
+    const { user } = useAuth();
+    const isUserOrGuest = !user || !user.role || ['user', 'patient'].includes(user.role.toLowerCase());
+
     if (!isOpen || !profile) return null;
+
+    const maskEmail = (email) => {
+        if (!email) return '';
+        const parts = String(email).split('@');
+        if (parts.length !== 2) return email;
+        const name = parts[0];
+        if (name.length <= 2) return `***@***`;
+        return `****${name.slice(-2)}*@****`;
+    };
+
+    const maskMobile = (mobile) => {
+        if (!mobile) return '';
+        const str = String(mobile);
+        if (str.length < 5) return str;
+        return `**${str.substring(2, 7)}***`;
+    };
 
     const profilePicUrl = profile.profile_image_url ? `/uploads/${profile.profile_image_url}` : null;
     // Smartly handle both /uploads/ and /uploads/documents/ paths
@@ -30,7 +50,7 @@ const ProfileViewModal = ({ isOpen, onClose, profile, title = "Profile Details",
         'id', 'password', 'profile_image_url', 'document_url', 'created_at',
         'role', 'name', 'bio', 'is_verified', 'type', 'specialty',
         'first_name', 'last_name', 'provider_id', 'profile_id',
-        'account_id', 'role_id', 'is_online', 'overall_rating', 'gender',
+        'account_id', 'role_id', 'is_online', 'overall_rating', 'gender', 'cover_image_url',
     ]);
 
     // Human-readable labels for known fields
@@ -180,9 +200,17 @@ const ProfileViewModal = ({ isOpen, onClose, profile, title = "Profile Details",
                                     .replace(/\b\w/g, l => l.toUpperCase())
                                     .trim();
 
-                                const displayValue = typeof value === 'boolean'
+                                let displayValue = typeof value === 'boolean'
                                     ? (value ? '✓ Yes' : '✗ No')
                                     : String(value);
+
+                                if (isUserOrGuest) {
+                                    if (key.toLowerCase().includes('email')) {
+                                        displayValue = maskEmail(displayValue);
+                                    } else if (key.toLowerCase().includes('mobile') || key.toLowerCase() === 'phone' || key.toLowerCase() === 'phone_number') {
+                                        displayValue = maskMobile(displayValue);
+                                    }
+                                }
 
                                 return (
                                     <div key={key} className="p-3 bg-gray-50 rounded-lg border border-gray-100">

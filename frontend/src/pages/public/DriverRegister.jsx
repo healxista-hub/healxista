@@ -8,12 +8,14 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import AmbulanceImage from '@/assets/images/hero/road.jpg';
 import TermsModal from '@/components/TermsModal';
+import { Eye, EyeOff } from 'lucide-react';
 
 const DriverRegister = () => {
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [licenseNumber, setLicenseNumber] = useState('');
     const [vehicleNumber, setVehicleNumber] = useState('');
     const [vehicleType, setVehicleType] = useState('');
@@ -264,14 +266,23 @@ const DriverRegister = () => {
 
                         <div className="space-y-1 col-span-1 md:col-span-2">
                             <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Password</label>
+                            <div className="relative">
                             <Input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="h-9"
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
                         </div>
                     </div>
                     <div className="flex items-start gap-2 pt-2">

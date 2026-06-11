@@ -9,12 +9,14 @@ import { toast } from 'sonner';
 import TermsModal from '@/components/TermsModal';
 
 import HomeImage from '@/assets/images/hero/icu.jpg';
+import { Eye, EyeOff } from 'lucide-react';
 
 const OldAgeHomeRegister = () => {
     const [name, setName] = useState('');
     const [adminName, setAdminName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [licenseNumber, setLicenseNumber] = useState('');
     const [mobile, setMobile] = useState('');
     const [address, setAddress] = useState('');
@@ -153,7 +155,16 @@ const OldAgeHomeRegister = () => {
 
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Password *</label>
-                        <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="h-9" required />
+                        <div className="relative">
+                            <Input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="h-9" required />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
                     </div>
                     <div className="flex items-start gap-2 pt-2">
                         <input

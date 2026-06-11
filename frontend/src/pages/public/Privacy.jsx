@@ -76,18 +76,7 @@ const Privacy = () => {
                             </p>
                         </div>
 
-                        {/* Section 4 */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 font-bold shrink-0">
-                                    <Key className="h-5 w-5" />
-                                </div>
-                                <h3 className="text-xl font-black text-slate-900">4. Ayushman Bharat Integration (ABHA)</h3>
-                            </div>
-                            <p className="text-gray-600 leading-relaxed pl-13">
-                                Health diagnostic summaries are integrated with Ayushman Bharat Digital Mission (ABDM) guidelines. Patient consent rules allow you to modify or revoke clinical sharing privileges directly from your dashboard profile at any time.
-                            </p>
-                        </div>
+
 
                         <div className="w-full h-px bg-slate-100" />
 
@@ -96,7 +85,7 @@ const Privacy = () => {
                             <div>
                                 <p className="text-sm font-extrabold text-slate-900">Information Privacy Governance</p>
                                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                                    Our protocols comply with the Digital Personal Data Protection (DPDP) Act of India. For privacy concerns or data erasure requests, please contact our Data Protection Officer at: <a href="mailto:privacy@healxista.com" className="text-blue-600 font-bold">privacy@healxista.com</a>.
+                                    Our protocols comply with the Digital Personal Data Protection (DPDP) Act of India. For privacy concerns or data erasure requests, please contact our Data Protection Officer at: <a href="mailto:info@healxista.com" className="text-blue-600 font-bold">info@healxista.com</a> or <a href="mailto:healxista@gmail.com" className="text-blue-600 font-bold">healxista@gmail.com</a>.
                                 </p>
                             </div>
                         </div>

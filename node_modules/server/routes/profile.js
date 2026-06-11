@@ -142,6 +142,12 @@ router.put('/:id', verifyUser, upload.fields([
     try {
         await client.query('BEGIN');
 
+        // Sanitize empty strings to null for numeric fields to prevent Postgres type errors
+        const numericFields = ['experienceYears', 'consultationFee', 'experience', 'capacity', 'latitude', 'longitude'];
+        numericFields.forEach(field => {
+            if (updates[field] === '') updates[field] = null;
+        });
+
         // 1. Update Profile
         let profileSegments = [];
         let profileValues = [];
@@ -170,10 +176,12 @@ router.put('/:id', verifyUser, upload.fields([
             last_longitude: 'last_longitude'
         };
 
+        let processedProfileCols = new Set();
         for (const [key, dbCol] of Object.entries(profileFields)) {
-            if (updates[key] !== undefined) {
+            if (updates[key] !== undefined && !processedProfileCols.has(dbCol)) {
                 profileSegments.push(`${dbCol} = $${pIdx++}`);
                 profileValues.push(updates[key]);
+                processedProfileCols.add(dbCol);
             }
         }
 
@@ -214,10 +222,12 @@ router.put('/:id', verifyUser, upload.fields([
             longitude: 'longitude'
         };
 
+        let seenAddrCols = new Set();
         for (const [key, dbCol] of Object.entries(addressFields)) {
-            if (updates[key] !== undefined) {
+            if (updates[key] !== undefined && !seenAddrCols.has(dbCol)) {
                 addressSegments.push(`${dbCol} = $${aIdx++}`);
                 addressValues.push(updates[key]);
+                seenAddrCols.add(dbCol);
             }
         }
 
@@ -232,13 +242,23 @@ router.put('/:id', verifyUser, upload.fields([
                 );
             } else {
                 // Insert new address
-                const fields = Object.keys(addressFields).filter(k => updates[k] !== undefined).map(k => addressFields[k]);
-                const placeholders = fields.map((_, i) => `$${i + 2}`);
-                const values = fields.map(k => updates[Object.keys(addressFields).find(key => addressFields[key] === k)]);
-                await client.query(
-                    `INSERT INTO addresses (account_id, ${fields.join(', ')}) VALUES ($1, ${placeholders.join(', ')})`,
-                    [id, ...values]
-                );
+                let insertFields = [];
+                let insertValues = [];
+                let seenInsertCols = new Set();
+                for (const [key, dbCol] of Object.entries(addressFields)) {
+                    if (updates[key] !== undefined && !seenInsertCols.has(dbCol)) {
+                        insertFields.push(dbCol);
+                        insertValues.push(updates[key]);
+                        seenInsertCols.add(dbCol);
+                    }
+                }
+                if (insertFields.length > 0) {
+                    const placeholders = insertFields.map((_, i) => `$${i + 2}`);
+                    await client.query(
+                        `INSERT INTO addresses (account_id, ${insertFields.join(', ')}) VALUES ($1, ${placeholders.join(', ')})`,
+                        [id, ...insertValues]
+                    );
+                }
             }
         }
 
@@ -304,7 +324,7 @@ router.put('/:id', verifyUser, upload.fields([
              p.is_sharing_location, p.last_latitude, p.last_longitude
              FROM accounts a 
              JOIN roles r ON a.role_id = r.role_id
-             JOIN profiles p ON a.account_id = p.account_id 
+             LEFT JOIN profiles p ON a.account_id = p.account_id 
              LEFT JOIN addresses addr ON p.account_id = addr.account_id 
              LEFT JOIN service_providers sp ON p.account_id = sp.account_id
              LEFT JOIN doctors doc ON sp.provider_id = doc.provider_id

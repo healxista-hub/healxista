@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import HeroImage from '@/assets/images/hero/doctor.jpg'; // Background image
+import { Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
     return (

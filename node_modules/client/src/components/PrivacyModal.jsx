@@ -61,18 +61,12 @@ const PrivacyModal = ({ isOpen, onClose }) => {
                                 <p>Healxista operates under strict health data frameworks. We never trade, license, or sell patient medical profiles or telemetry metrics to external pharmaceutical or advertising brokers.</p>
                             </section>
 
-                            <section className="space-y-2">
-                                <div className="flex items-center gap-2 text-gray-900 font-bold">
-                                    <Key className="h-4 w-4 text-yellow-600" />
-                                    <h3>4. Ayushman Bharat (ABHA) Compliance</h3>
-                                </div>
-                                <p>Health diagnostic summaries are integrated with Ayushman Bharat Digital Mission (ABDM) guidelines. Patient consent rules allow you to modify or revoke clinical sharing privileges directly from your dashboard profile.</p>
-                            </section>
+
 
                             <div className="bg-slate-50 p-4 rounded-xl flex gap-3">
                                 <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                                 <p className="text-xs text-gray-500">
-                                    Our protocols comply with the Digital Personal Data Protection (DPDP) Act of India. For privacy concerns, please contact our Data Protection Officer at <a href="mailto:privacy@healxista.com" className="text-blue-600 font-bold">privacy@healxista.com</a>.
+                                    Our protocols comply with the Digital Personal Data Protection (DPDP) Act of India. For privacy concerns, please contact our Data Protection Officer at <a href="mailto:info@healxista.com" className="text-blue-600 font-bold">info@healxista.com</a> or <a href="mailto:healxista@gmail.com" className="text-blue-600 font-bold">healxista@gmail.com</a>.
                                 </p>
                             </div>
                         </div>

@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import PhysioImage from '@/assets/images/hero/doctor.jpg';
+import { Eye, EyeOff } from 'lucide-react';
 
 const PhysiotherapyLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
@@ -94,15 +96,27 @@ const PhysiotherapyLogin = () => {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Password</label>
-                        <Input
-                            type="password"
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Password</label>
+                            <a href="tel:+919239362736" className="text-[10px] text-red-600 font-bold hover:underline transition-colors" title="Call Healxista Support">Forgot Password?</a>
+                        </div>
+                        <div className="relative">
+                            <Input
+                            type={showPassword ? "text" : "password"}
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="h-9"
                             required
                         />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
                     </div>
 
                     {error && <p className="text-xs text-red-600 font-medium">{error}</p>}

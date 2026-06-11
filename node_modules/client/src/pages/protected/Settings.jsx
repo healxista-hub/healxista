@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
+import ChangePassword from '../../components/ChangePassword';
+
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
+
 import { Label } from '@/components/ui/label';
+
 import { useAuth } from '@/context/AuthContext';
+
 import { useNavigate } from 'react-router-dom';
+
 import { toast } from 'sonner';
+
 import { motion } from 'framer-motion';
+
 import {
+
     User,
     Mail,
     Phone,
@@ -34,7 +45,7 @@ const Settings = () => {
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        navigate('/');
     };
 
     const handleSave = async () => {
@@ -165,6 +176,7 @@ const Settings = () => {
                             </Button>
                         </CardContent>
                     </Card>
+                    <ChangePassword />
                 </div>
 
                 {/* Quick Settings */}
@@ -196,6 +208,13 @@ const Settings = () => {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-6 space-y-3">
+                            <Button 
+                                onClick={() => navigate('/login/super-admin')}
+                                variant="outline" 
+                                className="w-full h-12 rounded-xl border-slate-200 font-bold flex items-center gap-2 justify-start px-4 text-xs group hover:bg-slate-900 hover:text-white transition-all bg-red-50/50"
+                            >
+                                <Shield className="h-4 w-4 text-red-500" /> Super Admin Access
+                            </Button>
                             <Button variant="outline" className="w-full h-12 rounded-xl border-slate-200 font-bold flex items-center gap-2 justify-start px-4 text-xs group hover:bg-slate-900 hover:text-white transition-all">
                                 <Lock className="h-4 w-4 text-slate-400 group-hover:text-red-500" /> Access Keys
                             </Button>

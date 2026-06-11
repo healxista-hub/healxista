@@ -106,7 +106,7 @@ const Terms = () => {
 
                         <div className="bg-slate-50 p-6 rounded-2xl text-center space-y-2">
                             <p className="text-sm font-extrabold text-slate-900">Have Questions About Compliance?</p>
-                            <p className="text-xs text-gray-500">Contact our legal team at: <a href="mailto:legal@healxista.com" className="text-blue-600 font-bold">legal@healxista.com</a> or visit our Purulia Operations HQ.</p>
+                            <p className="text-xs text-gray-500">Contact our legal team at: <a href="mailto:info@healxista.com" className="text-blue-600 font-bold">info@healxista.com</a> or <a href="mailto:healxista@gmail.com" className="text-blue-600 font-bold">healxista@gmail.com</a>, or visit our Purulia Operations HQ.</p>
                         </div>
                     </motion.div>
                 </div>

@@ -76,7 +76,7 @@ const Navbar = () => {
 
                 {/* DESKTOP NAV */}
                 <div className="hidden lg:flex items-center gap-2">
-                    <Link to="/" className={`px-3 py-2 rounded-lg text-base font-semibold transition-all ${isActive('/') ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 hover:text-red-600 hover:bg-red-50' : 'text-white/90 hover:text-white hover:bg-white/10')}`}>
+                    <Link to="/" className={`px-3 py-2 text-base font-semibold transition-all relative ${isActive('/') ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                         Home
                     </Link>
 
@@ -86,7 +86,7 @@ const Navbar = () => {
                         onMouseEnter={() => setShowServices(true)}
                         onMouseLeave={() => setShowServices(false)}
                     >
-                        <button className={`px-3 py-2 rounded-lg flex items-center gap-1 text-base font-semibold transition-all ${location.pathname.includes('/') && location.pathname !== '/' && location.pathname !== '/about' && location.pathname !== '/contact' ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 group-hover:text-red-600 group-hover:bg-red-50' : 'text-white/90 group-hover:text-white group-hover:bg-white/10')}`}>
+                        <button className={`px-3 py-2 flex items-center gap-1 text-base font-semibold transition-all relative group ${serviceLinks.some(link => isActive(link.path)) ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                             Services <ChevronDown className="h-4 w-4" />
                         </button>
 
@@ -105,19 +105,19 @@ const Navbar = () => {
                             </div>
                         </div>
                     </div>
-                    <Link to="/news" className={`px-3 py-2 rounded-lg text-base font-semibold transition-all ${isActive('/news') ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 hover:text-red-600 hover:bg-red-50' : 'text-white/90 hover:text-white hover:bg-white/10')}`}>
+                    <Link to="/news" className={`px-3 py-2 text-base font-semibold transition-all relative ${isActive('/news') ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                         News
                     </Link>
-                    <Link to="/publication" className={`px-3 py-2 rounded-lg text-base font-semibold transition-all ${isActive('/publication') ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 hover:text-red-600 hover:bg-red-50' : 'text-white/90 hover:text-white hover:bg-white/10')}`}>
+                    <Link to="/publication" className={`px-3 py-2 text-base font-semibold transition-all relative ${isActive('/publication') ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                         Research
                     </Link>
-                    <Link to="/careers" className={`px-3 py-2 rounded-lg text-base font-semibold transition-all ${isActive('/careers') ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 hover:text-red-600 hover:bg-red-50' : 'text-white/90 hover:text-white hover:bg-white/10')}`}>
+                    <Link to="/careers" className={`px-3 py-2 text-base font-semibold transition-all relative ${isActive('/careers') ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                         Careers
                     </Link>
-                    <Link to="/about" className={`px-3 py-2 rounded-lg text-base font-semibold transition-all ${isActive('/about') ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 hover:text-red-600 hover:bg-red-50' : 'text-white/90 hover:text-white hover:bg-white/10')}`}>
+                    <Link to="/about" className={`px-3 py-2 text-base font-semibold transition-all relative ${isActive('/about') ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                         About
                     </Link>
-                    <Link to="/contact" className={`px-3 py-2 rounded-lg text-base font-semibold transition-all ${isActive('/contact') ? (isScrolled ? 'text-red-600 bg-red-50' : 'text-white bg-white/20') : (isScrolled ? 'text-gray-700 hover:text-red-600 hover:bg-red-50' : 'text-white/90 hover:text-white hover:bg-white/10')}`}>
+                    <Link to="/contact" className={`px-3 py-2 text-base font-semibold transition-all relative ${isActive('/contact') ? (isScrolled ? 'text-red-600 after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-red-600 after:rounded-full' : 'text-white after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-[80%] after:h-[3px] after:bg-white after:rounded-full') : (isScrolled ? 'text-gray-700 hover:text-red-600' : 'text-white/90 hover:text-white')}`}>
                         Contact
                     </Link>
                 </div>

@@ -72,7 +72,7 @@ const DataSecurityModal = ({ isOpen, onClose }) => {
                             <div className="bg-blue-50/50 p-4 rounded-xl flex gap-3 border border-blue-100">
                                 <HeartHandshake className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
                                 <p className="text-xs text-blue-700 font-medium">
-                                    Our operational security meets certified global health standards. For critical security reports or infrastructure queries, reach our Purulia systems compliance office at <a href="mailto:security@healxista.com" className="text-blue-700 font-bold underline">security@healxista.com</a>.
+                                    Our operational security meets certified global health standards. For critical security reports or infrastructure queries, reach our Purulia systems compliance office at <a href="mailto:info@healxista.com" className="text-blue-700 font-bold underline">info@healxista.com</a> or <a href="mailto:healxista@gmail.com" className="text-blue-700 font-bold underline">healxista@gmail.com</a>.
                                 </p>
                             </div>
                         </div>

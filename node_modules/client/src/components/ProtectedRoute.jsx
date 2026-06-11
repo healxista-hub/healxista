@@ -6,7 +6,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
     // 1. Check if user is authenticated at all
     if (!token || !user || !user.role) {
-        return <Navigate to="/provider-portal" replace />;
+        return <Navigate to="/" replace />;
     }
 
     const role = user.role.toLowerCase();

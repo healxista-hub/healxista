@@ -166,7 +166,7 @@ const Footer = () => {
                 justify-between items-center gap-4 text-sm text-gray-500">
 
                     <p>
-                        © 2026 Healxista Emergency Services | Purulia, India
+                        © 2026 Healxista Emergency Services | Purulia, India | Developed By: Healxista
                     </p>
 
                     <div className="flex flex-col items-center md:items-end gap-1.5">

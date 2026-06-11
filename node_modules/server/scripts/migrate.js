@@ -231,9 +231,30 @@ export async function runMigrations() {
         console.log('✅ All system tables ready');
 
         // 4. Seed Data (Idempotent)
-        const requiredRoles = ['Admin', 'Patient', 'Doctor', 'Driver', 'Medicine Store', 'Physiotherapy', 'Old Age Home', 'Lab Test', 'Home Care'];
+        const requiredRoles = ['Super Admin', 'Admin', 'Patient', 'Doctor', 'Driver', 'Medicine Store', 'Physiotherapy', 'Old Age Home', 'Lab Test', 'Home Care'];
         for (const role of requiredRoles) {
             await db.query(`INSERT INTO roles (name) VALUES ($1) ON CONFLICT (name) DO NOTHING`, [role]);
+        }
+
+        // Seed Default Super Admin
+        const superAdminEmail = 'superadmin@healxista.com';
+        const superAdminCheck = await db.query('SELECT 1 FROM accounts WHERE email = $1', [superAdminEmail]);
+        if (superAdminCheck.rows.length === 0) {
+            const bcrypt = await import('bcryptjs');
+            const hashedPassword = await bcrypt.default.hash('superadmin123', 12);
+            const roleRes = await db.query('SELECT role_id FROM roles WHERE name = $1', ['Super Admin']);
+            if (roleRes.rows.length > 0) {
+                const saRoleId = roleRes.rows[0].role_id;
+                const saAccRes = await db.query(
+                    'INSERT INTO accounts (email, password, role_id) VALUES ($1, $2, $3) RETURNING account_id',
+                    [superAdminEmail, hashedPassword, saRoleId]
+                );
+                const saId = saAccRes.rows[0].account_id;
+                await db.query('UPDATE accounts SET custom_id = $1 WHERE account_id = $2', [`SUP-100${saId}`, saId]);
+                await db.query('INSERT INTO user_roles (account_id, role_id) VALUES ($1, $2)', [saId, saRoleId]);
+                await db.query('INSERT INTO profiles (account_id, first_name, last_name) VALUES ($1, $2, $3)', [saId, 'System', 'Super Admin']);
+                console.log('✅ Default Super Admin seeded: superadmin@healxista.com');
+            }
         }
 
         const services = [

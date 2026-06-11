@@ -19,7 +19,6 @@ const NewsUpdates = lazy(() => import('./pages/public/NewsUpdates'));
 const Ambulance = lazy(() => import('./pages/public/Ambulance'));
 const Doctors = lazy(() => import('./pages/public/Doctors'));
 const Medicines = lazy(() => import('./pages/public/Medicines'));
-const Hospitals = lazy(() => import('./pages/public/Hospitals'));
 const UserLogin = lazy(() => import('./pages/public/UserLogin'));
 const UserRegister = lazy(() => import('./pages/public/UserRegister'));
 const DriverLogin = lazy(() => import('./pages/public/DriverLogin'));
@@ -38,6 +37,7 @@ const HomeCareLogin = lazy(() => import('./pages/public/HomeCareLogin'));
 const HomeCareRegister = lazy(() => import('./pages/public/HomeCareRegister'));
 const AdminLogin = lazy(() => import('./pages/public/AdminLogin'));
 const AdminRegister = lazy(() => import('./pages/public/AdminRegister'));
+const SuperAdminLogin = lazy(() => import('./pages/public/SuperAdminLogin'));
 const LabTest = lazy(() => import('./pages/public/LabTest'));
 const HomeCare = lazy(() => import('./pages/public/HomeCare'));
 const PhysiotherapyPage = lazy(() => import('./pages/public/Physiotherapy'));
@@ -49,6 +49,9 @@ const Privacy = lazy(() => import('./pages/public/Privacy'));
 // Protected Pages (Dashboards)
 const Dashboard = lazy(() => import('./pages/protected/Dashboard'));
 const AdminDashboard = lazy(() => import('./pages/protected/AdminDashboard'));
+const SuperAdminDashboard = lazy(() => import('./pages/protected/SuperAdminDashboard'));
+const SuperAdminDirectory = lazy(() => import('./pages/protected/SuperAdminDirectory'));
+const SuperAdminSettings = lazy(() => import('./pages/protected/SuperAdminSettings'));
 const DriverDashboard = lazy(() => import('./pages/protected/DriverDashboard'));
 const DoctorDashboard = lazy(() => import('./pages/protected/DoctorDashboard'));
 const MedicineStoreDashboard = lazy(() => import('./pages/protected/MedicineStoreDashboard'));
@@ -60,6 +63,8 @@ const HomeCareAppointments = lazy(() => import('./pages/protected/HomeCareAppoin
 const HomeCarePatients = lazy(() => import('./pages/protected/HomeCarePatients'));
 const HomeCareSettings = lazy(() => import('./pages/protected/HomeCareSettings'));
 const LabTestSettings = lazy(() => import('./pages/protected/LabTestSettings'));
+const LabTestAppointments = lazy(() => import('./pages/protected/LabTestAppointments'));
+const LabTestPatients = lazy(() => import('./pages/protected/LabTestPatients'));
 
 // Protected Pages (Driver)
 const DriverAmbulances = lazy(() => import('./pages/protected/DriverAmbulances'));
@@ -125,6 +130,16 @@ import DashboardLayout from './layout/DashboardLayout';
 import WebsiteLayout from './layout/WebsiteLayout';
 import LiveMapComponent from './components/LiveMapComponent';
 
+const LiveMapRouteWrapper = () => {
+    const { user } = useAuth();
+    if (!user) return <Navigate to="/" replace />;
+    const normalizedRole = user.role?.toLowerCase();
+    let mode = 'user';
+    if (normalizedRole === 'admin' || normalizedRole === 'super admin' || normalizedRole === 'super_admin') mode = 'admin';
+    else if (normalizedRole === 'driver') mode = 'driver';
+    return <LiveMapComponent viewMode={mode} />;
+};
+
 const App = () => {
   const [loading, setLoading] = useState(() => {
     return !sessionStorage.getItem('hasSeenPreloader');
@@ -168,7 +183,6 @@ const App = () => {
                     <Route path="/ambulance" element={<Ambulance />} />
                     <Route path="/doctors" element={<Doctors />} />
                     <Route path="/medicines" element={<Medicines />} />
-                    <Route path="/hospitals" element={<Hospitals />} />
 
                     {/* Sub-pages */}
                     <Route path="/lab-test" element={<LabTest />} />
@@ -193,6 +207,7 @@ const App = () => {
                   <Route path="/login/lab-test" element={<PublicRoute><LabTestLogin /></PublicRoute>} />
                   <Route path="/login/home-care" element={<PublicRoute><HomeCareLogin /></PublicRoute>} />
                   <Route path="/login/admin" element={<PublicRoute><AdminLogin /></PublicRoute>} />
+                  <Route path="/login/super-admin" element={<ProtectedRoute allowedRoles={['admin']}><SuperAdminLogin /></ProtectedRoute>} />
 
                   {/* Role-Specific Register Routes */}
                   <Route path="/register/user" element={<PublicRoute><UserRegister /></PublicRoute>} />
@@ -220,6 +235,30 @@ const App = () => {
                       element={
                         <ProtectedRoute allowedRoles={['admin']}>
                           <AdminDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/super-admin-dashboard"
+                      element={
+                        <ProtectedRoute allowedRoles={['Super Admin', 'super_admin']}>
+                          <SuperAdminDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/super-admin/directory"
+                      element={
+                        <ProtectedRoute allowedRoles={['super_admin', 'super admin']}>
+                          <SuperAdminDirectory />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/super-admin/settings"
+                      element={
+                        <ProtectedRoute allowedRoles={['super_admin', 'super admin']}>
+                          <SuperAdminSettings />
                         </ProtectedRoute>
                       }
                     />
@@ -275,6 +314,16 @@ const App = () => {
                     <Route path="/lab-test-dashboard" element={
                        <ProtectedRoute allowedRoles={['lab_test']}>
                          <LabTestDashboard />
+                       </ProtectedRoute>
+                     } />
+                     <Route path="/lab-test/appointments" element={
+                       <ProtectedRoute allowedRoles={['lab_test']}>
+                         <LabTestAppointments />
+                       </ProtectedRoute>
+                     } />
+                     <Route path="/lab-test/patients" element={
+                       <ProtectedRoute allowedRoles={['lab_test']}>
+                         <LabTestPatients />
                        </ProtectedRoute>
                      } />
                      <Route path="/lab-test/settings" element={
@@ -521,7 +570,7 @@ const App = () => {
                       path="/map"
                       element={
                         <ProtectedRoute allowedRoles={['user', 'driver', 'admin']}>
-                          <LiveMapComponent />
+                          <LiveMapRouteWrapper />
                         </ProtectedRoute>
                       }
                     />

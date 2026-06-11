@@ -127,15 +127,16 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                 const newPos = [latitude, longitude];
                 setMyPosition(newPos);
 
-                // Publish Location via Socket ONLY if sharing is ON
-                if (socket && user && (isSharingLocation || viewMode === 'admin')) {
+                // Publish Location via Socket ONLY if sharing is ON or if user has active bookings or is admin
+                if (socket && user && (isSharingLocation || (activeBookings && activeBookings.length > 0) || viewMode === 'admin')) {
                     const payload = {
                         id: user.id,
                         name: user.name,
                         position: newPos,
                         status: user.role === 'driver' ? status : 'Online',
                         role: user.role,
-                        activeBookings: activeBookings
+                        activeBookings: activeBookings,
+                        vehicleNumber: user.vehicleNumber || 'Unknown'
                     };
 
                     socket.emit('update_location', payload);
@@ -319,14 +320,15 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                             {viewMode !== 'admin' && (
                                 <Marker position={myPosition} icon={viewMode === 'driver' ? ambulanceIcon : userIcon}>
                                     <Popup>
-                                        <div className="p-1 min-w-[150px]">
-                                            <p className="font-bold text-lg mb-1">{viewMode === 'driver' ? '🚑 You (Ambulance)' : '👤 You (User)'}</p>
-                                            <div className="text-sm space-y-1">
-                                                <p><span className="font-semibold">Name:</span> {user?.name}</p>
-                                                <p><span className="font-semibold">Status:</span> {user?.role === 'driver' ? status : 'Online'}</p>
-                                                <p className="text-xs text-gray-500 mt-2">Lat: {myPosition[0].toFixed(4)}, Lng: {myPosition[1].toFixed(4)}</p>
+                                            <div className="p-1 min-w-[150px]">
+                                                <p className="font-bold text-lg mb-1">{viewMode === 'driver' ? '🚑 You (Ambulance)' : '👤 You (User)'}</p>
+                                                <div className="text-sm space-y-1">
+                                                    <p><span className="font-semibold">Name:</span> {user?.name}</p>
+                                                    {viewMode === 'driver' && user?.vehicleNumber && <p><span className="font-semibold">Vehicle:</span> {user.vehicleNumber}</p>}
+                                                    <p><span className="font-semibold">Status:</span> {user?.role === 'driver' ? status : 'Online'}</p>
+                                                    <p className="text-xs text-gray-500 mt-2">Lat: {myPosition[0].toFixed(4)}, Lng: {myPosition[1].toFixed(4)}</p>
+                                                </div>
                                             </div>
-                                        </div>
                                     </Popup>
                                 </Marker>
                             )}
@@ -348,6 +350,7 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                                                 <p className={`font-bold text-lg mb-1 ${isAmbulance ? 'text-red-600' : 'text-blue-600'}`}>{label}</p>
                                                 <div className="text-sm space-y-1">
                                                     <p><span className="font-semibold">{nameLabel}</span> {loc.name}</p>
+                                                    {isAmbulance && loc.vehicleNumber && <p><span className="font-semibold">Vehicle:</span> {loc.vehicleNumber}</p>}
                                                     <p><span className="font-semibold">Status:</span> <span className={statusColor}>{loc.status}</span></p>
                                                     {loc.mobile && <p><span className="font-semibold">Contact:</span> {loc.mobile}</p>}
                                                     <p className="text-xs text-gray-500 mt-2">Lat: {loc.position[0].toFixed(4)}, Lng: {loc.position[1].toFixed(4)}</p>

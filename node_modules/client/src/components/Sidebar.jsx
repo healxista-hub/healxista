@@ -2,7 +2,7 @@ import React from 'react';
 import logo from '@/assets/logo.png';
 import { NavLink } from 'react-router-dom';
 import {
-    LayoutDashboard,
+    LayoutDashboard, List,
     Users,
     Map,
     Ambulance,
@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         switch (role) {
             case 'driver':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/driver-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/driver-dashboard' },
                     { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Ambulances', icon: Ambulance, path: '/driver/ambulances' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ];
             case 'doctor':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/doctor-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/doctor-dashboard' },
                     { name: 'Appointments', icon: Calendar, path: '/doctor/appointments' },
                     { name: 'Patients', icon: Users, path: '/doctor/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -50,7 +50,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ];
             case 'medicine_store':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/medicine-store-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/medicine-store-dashboard' },
                     { name: 'Orders', icon: FileText, path: '/medicine/orders' },
                     { name: 'Inventory', icon: Pill, path: '/medicine/inventory' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -58,7 +58,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ];
             case 'physiotherapy':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/physiotherapy-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/physiotherapy-dashboard' },
                     { name: 'Sessions', icon: Activity, path: '/physio/sessions' },
                     { name: 'Patients', icon: Users, path: '/physio/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ];
             case 'old_age_home':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/old-age-home-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/old-age-home-dashboard' },
                     { name: 'Inquiries', icon: Users, path: '/old-age/inquiries' },
                     { name: 'Residents', icon: Home, path: '/old-age/residents' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -74,13 +74,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ];
             case 'lab_test':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/lab-test-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/lab-test-dashboard' },
+                    { name: 'Appointments', icon: Calendar, path: '/lab-test/appointments' },
+                    { name: 'Patients', icon: Users, path: '/lab-test/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
                     { name: 'Settings', icon: Settings, path: '/lab-test/settings' },
                 ];
             case 'home_care':
                 return [
-                    { name: 'Dashboard', icon: LayoutDashboard, path: '/home-care-dashboard' },
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/home-care-dashboard' },
                     { name: 'Appointments', icon: Calendar, path: '/home-care/appointments' },
                     { name: 'Patients', icon: Users, path: '/home-care/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -88,7 +90,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 ];
             case 'admin':
                 return [
-                    { name: 'Overview', icon: LayoutDashboard, path: '/admin-dashboard' },
+                    { name: 'Overview', icon: LayoutDashboard, List, path: '/admin-dashboard' },
                     { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Quick Bookings', icon: Activity, path: '/admin/quick-bookings' },
                     { name: 'Bookings', icon: ClipboardList, path: '/admin/bookings' },
@@ -106,9 +108,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     { name: 'Activity Log', icon: FileText, path: '/admin/activity' },
                     { name: 'Settings', icon: Settings, path: '/admin/settings' },
                 ];
+            case 'super_admin':
+                return [
+                    { name: 'Dashboard', icon: LayoutDashboard, List, path: '/super-admin-dashboard' },
+                    { name: 'List Directory', icon: List, path: '/super-admin/directory' },
+                    { name: 'Activity Log', icon: FileText, path: '/admin/activity' },
+                    { name: 'Settings', icon: Settings, path: '/super-admin/settings' }
+                ];
             default: // User
                 return [
-                    { name: 'Overview', icon: LayoutDashboard, path: '/dashboard' },
+                    { name: 'Overview', icon: LayoutDashboard, List, path: '/dashboard' },
                     { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'My Bookings', icon: Calendar, path: '/user/bookings' },
                     { name: 'Documents & Sharing', icon: FileText, path: '/documents' },

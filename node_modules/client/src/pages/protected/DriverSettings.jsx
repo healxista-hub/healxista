@@ -1,5 +1,6 @@
 import React from 'react';
 import ProfileForm from '@/components/ProfileForm';
+import ChangePassword from '../../components/ChangePassword';
 
 const DriverSettings = () => {
     return (
@@ -24,6 +25,11 @@ const DriverSettings = () => {
                         { name: 'is_sharing_location', type: 'checkbox', label: 'Location Sharing', placeholder: 'Share my real-time location' }
                     ]}
                 />
+            </div>
+
+            {/* Security & Password Module */}
+            <div className="rounded-[2.5rem] border border-slate-100 bg-white shadow-sm p-4 md:p-10">
+                <ChangePassword />
             </div>
         </div>
     );

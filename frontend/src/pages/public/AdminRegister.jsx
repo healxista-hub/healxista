@@ -8,11 +8,13 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import AdminImage from '@/assets/images/hero/doctor.jpg'; // Generic background
 import TermsModal from '@/components/TermsModal';
+import { Eye, EyeOff } from 'lucide-react';
 
 const AdminRegister = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [accessCode, setAccessCode] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -120,14 +122,23 @@ const AdminRegister = () => {
 
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Security Access Code</label>
-                        <Input
-                            type="password"
+                        <div className="relative">
+                            <Input
+                            type={showPassword ? "text" : "password"}
                             placeholder="Required for admin registration"
                             value={accessCode}
                             onChange={(e) => setAccessCode(e.target.value)}
                             className="border-slate-300"
                             required
                         />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
                         <p className="text-[10px] text-muted-foreground mt-0.5">Contact system owner for code.</p>
                     </div>
 

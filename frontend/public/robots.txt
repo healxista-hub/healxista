@@ -1,12 +1,25 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /user/
-Disallow: /doctor/
-Disallow: /driver/
-Disallow: /pharmacy/
-Disallow: /lab/
-Disallow: /physio/
-Disallow: /old-age-home/
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /provider-portal
+Allow: /privacy
+Allow: /terms
+
+Disallow: /dashboard
+Disallow: /admin-dashboard
+Disallow: /super-admin-dashboard
+Disallow: /super-admin/
+Disallow: /driver-dashboard
+Disallow: /doctor-dashboard
+Disallow: /medicine-store-dashboard
+Disallow: /physiotherapy-dashboard
+Disallow: /old-age-home-dashboard
+Disallow: /lab-test-dashboard
+Disallow: /home-care-dashboard
+Disallow: /map
+Disallow: /documents
+Disallow: /api/
 
 Sitemap: https://healxista.com/sitemap.xml

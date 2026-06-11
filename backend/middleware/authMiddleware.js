@@ -13,7 +13,7 @@ export const verifyAdmin = (req, res, next) => {
         const decoded = jwt.verify(token, SECRET_KEY);
         req.user = decoded;
 
-        if (req.user.role?.toLowerCase() !== 'admin') {
+        if (req.user.role?.toLowerCase() !== 'admin' && req.user.role?.toLowerCase() !== 'super admin') {
             return res.status(403).json({ message: 'Forbidden: Admin access required' });
         }
 

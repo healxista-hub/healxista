@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -26,6 +27,7 @@ import recordsRoutes from './routes/records.js';
 import chatRoutes from './routes/chat.js';
 import documentRoutes from './routes/documents.js';
 import residentsRoutes from './routes/residents.js';
+import superadminRoutes from './routes/superadmin.js';
 import db from './db.js';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -54,6 +56,7 @@ const PORT = process.env.PORT || 5050;
 app.set('trust proxy', 1);
 
 // Security Middleware
+app.use(compression());
 app.use(helmet());
 app.use(cookieParser());
 
@@ -170,6 +173,7 @@ app.use('/api/records', recordsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/residents', residentsRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/superadmin', superadminRoutes);
 
 app.get('/api-status', (req, res) => {
     res.send('Healxista API is running...');
