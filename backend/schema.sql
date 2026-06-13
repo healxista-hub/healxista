@@ -1,4 +1,6 @@
 -- Healxista Core Database Schema (Reconstructed & Optimized)
+CREATE SCHEMA IF NOT EXISTS public;
+SET search_path TO public;
 
 -- 1. Roles
 CREATE TABLE IF NOT EXISTS roles (
