@@ -34,7 +34,8 @@ const pool = new Pool({
     keepAliveInitialDelayMillis: 10000
 });
 
-pool.on('connect', () => {
+pool.on('connect', (client) => {
+    client.query('SET search_path TO public;');
     console.log('✅ PostgreSQL Database connected successfully');
 });
 
