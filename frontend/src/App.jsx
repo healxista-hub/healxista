@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ChatCallProvider } from './context/ChatCallContext';
 import { HelmetProvider } from 'react-helmet-async';
@@ -569,7 +569,7 @@ const App = () => {
                     <Route
                       path="/map"
                       element={
-                        <ProtectedRoute allowedRoles={['user', 'driver', 'admin']}>
+                        <ProtectedRoute>
                           <LiveMapRouteWrapper />
                         </ProtectedRoute>
                       }

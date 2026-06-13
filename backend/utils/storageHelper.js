@@ -74,8 +74,12 @@ export const attachRelativePath = (req, res, next) => {
 const defaultFileFilter = (req, file, cb) => {
     const allowedMimeTypes = [
         'image/jpeg', 
+        'image/jpg',
         'image/png', 
+        'image/gif',
         'image/webp', 
+        'image/heic',
+        'image/heif',
         'application/pdf', 
         'application/msword', 
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -83,7 +87,7 @@ const defaultFileFilter = (req, file, cb) => {
     if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only JPG, PNG, WEBP, PDF, and DOC/DOCX files are allowed.'), false);
+        cb(new Error('Invalid file type. Only JPG, PNG, WEBP, GIF, HEIC, PDF, and DOC/DOCX files are allowed.'), false);
     }
 };
 

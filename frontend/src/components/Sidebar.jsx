@@ -43,6 +43,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'doctor':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/doctor-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Appointments', icon: Calendar, path: '/doctor/appointments' },
                     { name: 'Patients', icon: Users, path: '/doctor/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -51,6 +52,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'medicine_store':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/medicine-store-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Orders', icon: FileText, path: '/medicine/orders' },
                     { name: 'Inventory', icon: Pill, path: '/medicine/inventory' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -59,6 +61,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'physiotherapy':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/physiotherapy-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Sessions', icon: Activity, path: '/physio/sessions' },
                     { name: 'Patients', icon: Users, path: '/physio/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -67,6 +70,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'old_age_home':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/old-age-home-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Inquiries', icon: Users, path: '/old-age/inquiries' },
                     { name: 'Residents', icon: Home, path: '/old-age/residents' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -75,6 +79,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'lab_test':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/lab-test-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Appointments', icon: Calendar, path: '/lab-test/appointments' },
                     { name: 'Patients', icon: Users, path: '/lab-test/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -83,6 +88,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'home_care':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/home-care-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'Appointments', icon: Calendar, path: '/home-care/appointments' },
                     { name: 'Patients', icon: Users, path: '/home-care/patients' },
                     { name: 'Documents', icon: FileText, path: '/documents' },
@@ -111,6 +117,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'super_admin':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/super-admin-dashboard' },
+                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'List Directory', icon: List, path: '/super-admin/directory' },
                     { name: 'Activity Log', icon: FileText, path: '/admin/activity' },
                     { name: 'Settings', icon: Settings, path: '/super-admin/settings' }
