@@ -13,6 +13,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 const PhysiotherapyRegister = () => {
     const [name, setName] = useState('');
+    const [specialization, setSpecialization] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +45,7 @@ const PhysiotherapyRegister = () => {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password, role, licenseNumber, mobile, address, city, state, zipCode, gender, experienceYears, consultationFee }),
+                body: JSON.stringify({ name, email, password, role, specialization, licenseNumber, mobile, address, city, state, zipCode, gender, experienceYears, consultationFee }),
             });
 
             const data = await res.json();
@@ -96,6 +97,11 @@ const PhysiotherapyRegister = () => {
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Clinic/Physio Name *</label>
                         <Input type="text" placeholder="Dr. React Physio" value={name} onChange={(e) => setName(e.target.value)} className="h-9" required />
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Specialization *</label>
+                        <Input type="text" placeholder="Sports Rehab" value={specialization} onChange={(e) => setSpecialization(e.target.value)} className="h-9" required />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

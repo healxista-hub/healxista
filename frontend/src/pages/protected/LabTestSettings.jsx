@@ -23,7 +23,8 @@ const LabTestSettings = () => {
                         { name: 'address', type: 'textarea', label: 'Physical Location', placeholder: 'Complete address of the laboratory' },
                         { name: 'city', label: 'City', placeholder: 'City' },
                         { name: 'state', label: 'State', placeholder: 'State' },
-                        { name: 'zip_code', label: 'PIN Code', placeholder: 'PIN Code' }
+                        { name: 'zip_code', label: 'PIN Code', placeholder: 'PIN Code' },
+                        { name: 'home_sample_collection', type: 'checkbox', label: 'Home Sample Collection', placeholder: 'We provide home sample collection services' }
                     ]}
                 />
             </div>
