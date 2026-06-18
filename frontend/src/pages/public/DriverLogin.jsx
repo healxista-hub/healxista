@@ -102,7 +102,7 @@ const DriverLogin = () => {
                     <div className="space-y-1">
                         <div className="flex justify-between items-center">
                             <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Password</label>
-                            <a href="tel:+919239362736" className="text-[10px] text-red-600 font-bold hover:underline transition-colors" title="Call Healxista Support">Forgot Password?</a>
+                            <Link to="/forgot-password" className="text-[10px] text-red-600 font-bold hover:underline transition-colors">Forgot Password?</Link>
                         </div>
                         <div className="relative">
                             <Input
@@ -153,3 +153,4 @@ const DriverLogin = () => {
 };
 
 export default DriverLogin;
+

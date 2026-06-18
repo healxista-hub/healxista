@@ -418,8 +418,14 @@ io.on('connection', (socket) => {
 
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {
-    console.error(`❌ Global Error:`, err.stack);
+    console.error(`❌ Global Error:`, err.message);
     const isDev = process.env.NODE_ENV === 'development';
+    
+    // Handle Multer File Size Limit
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ message: 'File is too large. Maximum allowed size is 2MB.' });
+    }
+
     res.status(err.status || 500).json({ 
         message: err.message || 'Internal Server Error',
         ...(isDev && { stack: err.stack })

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { HeartPulse, Ambulance, Hospital, Stethoscope } from 'lucide-react';
+import { HeartPulse, Ambulance, Stethoscope, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const stats = [
-    { label: 'Lives Saved', value: 1500, suffix: '+', icon: HeartPulse },
-    { label: 'Active Ambulances', value: 120, suffix: '+', icon: Ambulance },
-    { label: 'Partner Hospitals', value: 30, suffix: '+', icon: Hospital },
-    { label: 'Expert Doctors', value: 50, suffix: '+', icon: Stethoscope },
+    { label: 'Happy Families', value: 20000, suffix: '+', icon: HeartPulse },
+    { label: 'OPD Done', value: 10000, suffix: '+', icon: Ambulance },
+    { label: 'Doctors', value: 30, suffix: '+', icon: Stethoscope },
+    { label: 'Completed', value: 5000, suffix: '+', icon: CheckCircle2 },
 ];
 
 // Count-up hook — must be used at component top-level only
@@ -65,9 +65,9 @@ const StatCard = ({ stat, index }) => {
     );
 };
 
-const StatsBar = () => {
+const StatsBar = ({ className = "relative z-20 -mt-8" }) => {
     return (
-        <section className="relative z-20 -mt-8 bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 py-14 shadow-2xl">
+        <section className={`${className} bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 py-14 shadow-2xl`}>
 
             {/* Soft ambient glow */}
             <div className="absolute inset-0 pointer-events-none">

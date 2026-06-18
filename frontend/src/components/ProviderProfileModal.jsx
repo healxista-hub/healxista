@@ -71,7 +71,7 @@ const ProviderProfileModal = ({ isOpen, onClose, provider, onBookNow }) => {
                                     {/* Avatar */}
                                     <div className="-mt-16 sm:-mt-20 h-32 w-32 rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-white shrink-0 relative z-10">
                                         <img 
-                                            src={provider.image || '/assets/images/placeholder_avatar.png'} 
+                                            src={provider.profile_image_url ? `/uploads/${provider.profile_image_url}` : (provider.image || '/assets/images/placeholder_avatar.png')} 
                                             alt={provider.name}
                                             className="w-full h-full object-cover"
                                             onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(provider.name || 'Provider') + '&background=random' }}

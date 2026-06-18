@@ -37,6 +37,9 @@ export default defineConfig({
   server: {
     host: true, // VERY IMPORTANT
     port: 5173,
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': 'http://localhost:5050',
       '/uploads': 'http://localhost:5050',

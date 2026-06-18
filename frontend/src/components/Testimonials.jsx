@@ -6,25 +6,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const testimonials = [
     {
-        name: 'Arvind Tiwari',
-        role: 'Saved Father from Cardiac Arrest',
+        name: 'Rahul Pal',
+        role: 'Nerve Block Treatment',
         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200',
         quote:
-            "I can't thank Healxista enough. Their ambulance arrived in 7 minutes flat. Immediate treatment saved my father's life.",
+            "I was struggling with severe neuralgia pain for a long time and nothing seemed to work. After undergoing nerve block treatment, I finally experienced significant relief. The pain has reduced drastically, and I can now return to my daily activities comfortably. Highly thankful for this effective treatment.",
     },
     {
-        name: 'Priya Sharma',
-        role: 'Inter-city Patient Transfer',
+        name: 'Sumanta Saha',
+        role: 'Arthritis Pain Management',
         image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200',
         quote:
-            'Arranging an air ambulance was seamless. ICU setup, transfers, everything handled professionally.',
+            'I was suffering from arthritis pain that made daily activities difficult. After PRP therapy, I experienced noticeable relief and improved joint mobility. The stiffness and discomfort have reduced significantly, allowing me to move more freely. I’m truly thankful for this effective and non-surgical treatment.',
     },
     {
-        name: 'Rahul Verma',
-        role: 'Emergency Accident Support',
+        name: 'Sourav Sarkar',
+        role: 'PRP Therapy',
         image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200',
         quote:
-            'The real-time tracking guided the ambulance perfectly. Truly a lifesaver in critical moments.',
+            'I was suffering from chronic joint pain that limited my daily activities. After undergoing PRP therapy, I experienced remarkable improvement and reduced discomfort. My mobility has improved, and I can move freely again. Grateful for this effective and non-surgical treatment that truly enhanced my quality of life.',
     },
 ];
 

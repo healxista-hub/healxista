@@ -51,7 +51,7 @@ const getProvidersByType = async (type) => {
         JOIN profiles p ON sp.account_id = p.account_id
         LEFT JOIN addresses addr ON sp.account_id = addr.account_id
         ${specializedJoin}
-        WHERE sp.provider_type = $1 AND sp.status = 'Active' AND sp.is_verified = true
+        WHERE sp.provider_type = $1 AND sp.status = 'Active' AND sp.is_verified = true AND a.deleted_at IS NULL
     `;
     const res = await db.query(query, [type]);
     return res.rows.map(row => ({
@@ -105,7 +105,8 @@ router.get('/medicines/all', async (req, res) => {
             JOIN medicine_stores ms ON i.store_id = ms.store_id
             JOIN service_providers sp ON ms.provider_id = sp.provider_id
             JOIN profiles prof ON sp.account_id = prof.account_id
-            WHERE sp.is_verified = true AND sp.status = 'Active'
+            JOIN accounts a ON sp.account_id = a.account_id
+            WHERE sp.is_verified = true AND sp.status = 'Active' AND a.deleted_at IS NULL
         `;
         const result = await db.query(query);
         res.json(result.rows);

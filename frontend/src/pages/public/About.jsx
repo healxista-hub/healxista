@@ -3,17 +3,13 @@ import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Target, Eye, HeartPulse, Shield, Users, Clock, Award, Activity, Linkedin, Mail, Github, X, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Target, Eye, HeartPulse, Shield, Users, Clock, Award, Activity, Linkedin, Mail, Github, X, CheckCircle2, ArrowRight, Ambulance, Stethoscope } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import PageHero from '@/components/PageHero';
+import StatsBar from '@/components/StatsBar';
 
-const stats = [
-    { label: 'Lives Saved', value: '1500+', icon: HeartPulse, color: 'text-red-500' },
-    { label: 'Active Ambulances', value: '120+', icon: Activity, color: 'text-blue-500' },
-    { label: 'Partner Hospitals', value: '30+', icon: Shield, color: 'text-green-500' },
-    { label: 'Expert Doctors', value: '50+', icon: Users, color: 'text-purple-500' }
-];
+
 
 const teamMembers = [
     {
@@ -177,33 +173,7 @@ const About = () => {
             </section>
 
             {/* STATS SECTION */}
-            <section className="py-16 bg-blue-900 text-white">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold mb-4">Our Impact in Numbers</h2>
-                        <p className="text-white/80">Delivering excellence every single day.</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-                        {stats.map((stat, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
-                                viewport={{ once: true }}
-                                className="text-center p-6 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-sm"
-                            >
-                                <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-white mb-4">
-                                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
-                                </div>
-                                <h3 className="text-3xl md:text-4xl font-extrabold text-white mb-2">{stat.value}</h3>
-                                <p className="text-white/80 font-medium">{stat.label}</p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            <StatsBar className="relative z-20" />
 
             {/* CORE VALUES */}
             <section className="py-20 bg-white">

@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    FileText, 
-    Upload, 
-    Download, 
-    Eye, 
-    X, 
-    PlusCircle, 
-    Calendar, 
-    Share2, 
-    UserPlus, 
-    Trash2, 
-    Search, 
-    User, 
-    Shield, 
+import {
+    FileText,
+    Upload,
+    Download,
+    Eye,
+    X,
+    PlusCircle,
+    Calendar,
+    Share2,
+    UserPlus,
+    Trash2,
+    Search,
+    User,
+    Shield,
     ExternalLink,
     Lock,
     Users
@@ -29,12 +29,12 @@ const Documents = () => {
     const [sharedDocs, setSharedDocs] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Modals
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState(null);
-    
+
     // Upload Form
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -78,7 +78,7 @@ const Documents = () => {
             const formData = new FormData();
             formData.append('document', file);
             formData.append('description', description || title); // Use title as fallback desc
-            
+
             // Note: raw fetch used for FormData, since fetchApi handles JSON centrally
             const res = await fetch(`/api/documents/upload`, {
                 method: 'POST',
@@ -143,7 +143,7 @@ const Documents = () => {
         }
     };
 
-    const filteredUsers = allUsers.filter(u => 
+    const filteredUsers = allUsers.filter(u =>
         u.name?.toLowerCase().includes(shareSearchTerm.toLowerCase()) ||
         u.role?.toLowerCase().includes(shareSearchTerm.toLowerCase())
     );
@@ -166,14 +166,14 @@ const Documents = () => {
                     <TabsTrigger value="my-docs">My Uploads ({myDocs.length})</TabsTrigger>
                     <TabsTrigger value="shared-with-me">Shared with Me ({sharedDocs.length})</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="my-docs" className="mt-6">
                     {loading ? (
                         <div className="p-12 text-center text-muted-foreground animate-pulse">Loading your documents...</div>
                     ) : myDocs.length === 0 ? (
-                        <EmptyState 
-                            icon={FileText} 
-                            title="No documents uploaded" 
+                        <EmptyState
+                            icon={FileText}
+                            title="No documents uploaded"
                             desc="You haven't uploaded any documents yet. Keep your prescriptions and reports organized here."
                             onAction={() => setIsUploadModalOpen(true)}
                             btnText="Upload My First Document"
@@ -181,9 +181,9 @@ const Documents = () => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {myDocs.map(doc => (
-                                <DocCard 
-                                    key={doc.document_id} 
-                                    doc={doc} 
+                                <DocCard
+                                    key={doc.document_id}
+                                    doc={doc}
                                     isOwner={true}
                                     onDelete={handleDelete}
                                     onShareClick={() => { setSelectedDoc(doc); setIsShareModalOpen(true); }}
@@ -198,17 +198,17 @@ const Documents = () => {
                     {loading ? (
                         <div className="p-12 text-center text-muted-foreground animate-pulse">Checking for shared documents...</div>
                     ) : sharedDocs.length === 0 ? (
-                        <EmptyState 
-                            icon={Users} 
-                            title="Nothing shared with you" 
+                        <EmptyState
+                            icon={Users}
+                            title="Nothing shared with you"
                             desc="Documents shared with you by patients or other providers will appear here."
                         />
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {sharedDocs.map(doc => (
-                                <DocCard 
-                                    key={doc.document_id} 
-                                    doc={doc} 
+                                <DocCard
+                                    key={doc.document_id}
+                                    doc={doc}
                                     isOwner={false}
                                 />
                             ))}
@@ -248,9 +248,17 @@ const Documents = () => {
                                             {file ? file.name : 'Select document file'}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-gray-500">PDF, PNG, JPG up to 10MB</p>
+                                    <p className="text-xs text-gray-500">PDF, PNG, JPG up to 2MB</p>
                                 </div>
-                                <input type="file" className="hidden" ref={fileInputRef} onChange={e => setFile(e.target.files[0])} accept=".pdf,image/*,.doc,.docx,.txt" required />
+                                <input type="file" className="hidden" ref={fileInputRef} onChange={e => {
+                                    const selectedFile = e.target.files[0];
+                                    if (selectedFile && selectedFile.size > 2 * 1024 * 1024) {
+                                        toast.error('File size is too large. Maximum allowed size is 2MB.');
+                                        e.target.value = ''; // Reset input
+                                        return;
+                                    }
+                                    setFile(selectedFile);
+                                }} accept=".pdf,image/*,.doc,.docx,.txt" required />
                             </div>
                             <div className="pt-4 flex gap-3 justify-end">
                                 <Button type="button" variant="ghost" onClick={() => setIsUploadModalOpen(false)} disabled={uploading}>Cancel</Button>
@@ -298,8 +306,8 @@ const Documents = () => {
                                             <p className="text-[10px] text-indigo-600 font-semibold uppercase tracking-tighter">{u.role}</p>
                                         </div>
                                     </div>
-                                    <Button 
-                                        size="sm" 
+                                    <Button
+                                        size="sm"
                                         variant={selectedDoc?.shared_with?.some(sw => sw.account_id === u.account_id) ? "ghost" : "outline"}
                                         disabled={sharingId === u.account_id || selectedDoc?.shared_with?.some(sw => sw.account_id === u.account_id)}
                                         onClick={() => handleShare(u.account_id)}
@@ -330,7 +338,7 @@ const DocCard = ({ doc, isOwner, onDelete, onShareClick, onRevoke }) => {
                     </button>
                 </div>
             )}
-            
+
             <div className="flex items-start justify-between mb-4">
                 <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 transition-transform group-hover:scale-110">
                     <FileText className="h-6 w-6" />
@@ -370,8 +378,8 @@ const DocCard = ({ doc, isOwner, onDelete, onShareClick, onRevoke }) => {
                         <Download className="h-3 w-3" /> View/Download
                     </a>
                     {isOwner && (
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={onShareClick}
                             className="flex-shrink-0 h-9 rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 transition-all"
                         >
@@ -387,7 +395,7 @@ const DocCard = ({ doc, isOwner, onDelete, onShareClick, onRevoke }) => {
                             {doc.shared_with.map(sw => (
                                 <div key={sw.account_id} className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 pr-1 group/chip hover:border-indigo-200 hover:bg-indigo-50 transition-colors">
                                     <span className="text-[10px] font-semibold text-slate-700">{sw.name} ({sw.custom_id})</span>
-                                    <button 
+                                    <button
                                         onClick={() => onRevoke(doc.document_id, sw.account_id)}
                                         className="p-0.5 rounded-full hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors"
                                         title="Revoke Access"

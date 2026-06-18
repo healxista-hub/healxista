@@ -6,7 +6,9 @@ import rateLimit from 'express-rate-limit';
 import db from '../db.js';
 import { logActivity } from '../utils/activityLogger.js';
 import { formatName } from '../utils/nameFormatter.js';
+import crypto from 'crypto';
 import { verifyUser } from '../middleware/authMiddleware.js';
+import { sendPasswordResetEmail } from '../utils/emailService.js';
 
 const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET;
@@ -328,6 +330,105 @@ router.put('/change-password', verifyUser, [
     } catch (error) {
         console.error('Change Password Error:', error);
         res.status(500).json({ message: 'Server error during password change' });
+    }
+});
+
+// Forgot Password
+router.post('/forgot-password', authLimiter, [
+    body('email').isEmail().normalizeEmail()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Valid email required.' });
+    }
+
+    const { email } = req.body;
+
+    try {
+        const result = await db.query('SELECT accounts.account_id, accounts.email, profiles.first_name FROM accounts LEFT JOIN profiles ON accounts.account_id = profiles.account_id WHERE accounts.email = $1', [email]);
+        const account = result.rows[0];
+
+        if (!account) {
+            // Return success even if account not found to prevent email enumeration
+            return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+        }
+
+        // Generate token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = await bcrypt.hash(resetToken, 12);
+        
+        // Expiry (1 hour)
+        const expiry = new Date();
+        expiry.setHours(expiry.getHours() + 1);
+
+        // Update DB
+        await db.query(
+            'UPDATE accounts SET reset_token = $1, reset_token_expires = $2 WHERE account_id = $3',
+            [hashedToken, expiry, account.account_id]
+        );
+
+        // Send Email
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+        
+        const emailSent = await sendPasswordResetEmail(email, resetUrl);
+
+        if (!emailSent) {
+            // Revert DB change if email failed
+            await db.query('UPDATE accounts SET reset_token = NULL, reset_token_expires = NULL WHERE account_id = $1', [account.account_id]);
+            return res.status(500).json({ message: 'Failed to send password reset email. Please try again later.' });
+        }
+
+        res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    } catch (error) {
+        console.error('Forgot Password Error:', error);
+        res.status(500).json({ message: 'Server error during password reset request' });
+    }
+});
+
+// Reset Password
+router.post('/reset-password', authLimiter, [
+    body('email').isEmail().normalizeEmail(),
+    body('token').exists(),
+    body('newPassword').isLength({ min: 6 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Validation error. Check token and new password length.', errors: errors.array() });
+    }
+
+    const { email, token, newPassword } = req.body;
+
+    try {
+        const result = await db.query('SELECT account_id, reset_token, reset_token_expires FROM accounts WHERE email = $1', [email]);
+        const account = result.rows[0];
+
+        if (!account || !account.reset_token || !account.reset_token_expires) {
+            return res.status(400).json({ message: 'Invalid or expired password reset token' });
+        }
+
+        // Check expiry
+        if (new Date() > new Date(account.reset_token_expires)) {
+            return res.status(400).json({ message: 'Password reset token has expired' });
+        }
+
+        // Verify token
+        const isMatch = await bcrypt.compare(token, account.reset_token);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid or expired password reset token' });
+        }
+
+        // Update password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await db.query(
+            'UPDATE accounts SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE account_id = $2',
+            [hashedPassword, account.account_id]
+        );
+
+        res.json({ message: 'Password has been reset successfully. You can now log in.' });
+    } catch (error) {
+        console.error('Reset Password Error:', error);
+        res.status(500).json({ message: 'Server error during password reset' });
     }
 });
 

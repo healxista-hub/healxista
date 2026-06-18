@@ -95,7 +95,7 @@ export const getUploadMiddleware = (options = {}) => {
     const storage = createStorage(options.folder);
     return multer({
         storage,
-        limits: { fileSize: options.limit || 10 * 1024 * 1024 }, // Default 10MB
+        limits: { fileSize: options.limit || 2 * 1024 * 1024 }, // Default 2MB
         fileFilter: options.fileFilter || defaultFileFilter
     });
 };

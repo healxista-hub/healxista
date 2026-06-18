@@ -4,7 +4,7 @@ import { FileText, Upload, Download, Eye, X, PlusCircle, Calendar } from 'lucide
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { getDocUrl } from '@/utils/api';
-
+import { toast } from 'sonner';
 const UserRecords = () => {
     const { token } = useAuth();
     const [records, setRecords] = useState([]);
@@ -217,14 +217,22 @@ const UserRecords = () => {
                                             </span>
                                         </div>
                                         <p className="text-xs text-gray-500">
-                                            {file ? `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB` : 'PDF, PNG, JPG up to 10MB'}
+                                            {file ? `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB` : 'PDF, PNG, JPG up to 2MB'}
                                         </p>
                                     </div>
                                     <input 
                                         type="file" 
                                         className="hidden" 
                                         ref={fileInputRef} 
-                                        onChange={e => setFile(e.target.files[0])}
+                                        onChange={e => {
+                                            const selectedFile = e.target.files[0];
+                                            if (selectedFile && selectedFile.size > 2 * 1024 * 1024) {
+                                                toast.error('File size is too large. Maximum allowed size is 2MB.');
+                                                e.target.value = ''; // Reset
+                                                return;
+                                            }
+                                            setFile(selectedFile);
+                                        }}
                                         accept=".pdf,image/*"
                                         required
                                     />

@@ -45,6 +45,8 @@ const Publication = lazy(() => import('./pages/public/Publication'));
 const Careers = lazy(() => import('./pages/public/Careers'));
 const Terms = lazy(() => import('./pages/public/Terms'));
 const Privacy = lazy(() => import('./pages/public/Privacy'));
+const ForgotPassword = lazy(() => import('./pages/public/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/public/ResetPassword'));
 
 // Protected Pages (Dashboards)
 const Dashboard = lazy(() => import('./pages/protected/Dashboard'));
@@ -196,6 +198,8 @@ const App = () => {
                   <Route path="/login" element={<Navigate to="/login/user" replace />} />
                   <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
                   <Route path="/provider-portal" element={<ProviderPortal />} />
+                  <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                  <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
                   {/* Role-Specific Login Routes */}
                   <Route path="/login/user" element={<PublicRoute><UserLogin /></PublicRoute>} />

@@ -3,40 +3,44 @@ import { motion } from 'framer-motion';
 
 const partners = [
     {
-        name: 'Indian Red Cross',
+        name: 'Remedia Pain Relief Clinic',
         initials: 'RC',
         color: 'bg-red-600',
-        tag: 'Emergency & Ambulance',
+        tag: 'Pain Management',
         logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_of_the_Indian_Red_Cross_Society.svg/200px-Logo_of_the_Indian_Red_Cross_Society.svg.png',
     },
+
     {
-        name: 'AIIMS New Delhi',
-        initials: 'AI',
-        color: 'bg-blue-800',
-        tag: 'Verified Doctors',
-        logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/0/08/All_India_Institute_of_Medical_Sciences%2C_New_Delhi_Logo.svg/240px-All_India_Institute_of_Medical_Sciences%2C_New_Delhi_Logo.svg.png',
+        name: 'Remedia Pain Relief Clinic',
+        initials: 'RC',
+        color: 'bg-red-600',
+        tag: 'Pain Management',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_of_the_Indian_Red_Cross_Society.svg/200px-Logo_of_the_Indian_Red_Cross_Society.svg.png',
     },
+
     {
-        name: 'Dr. Lal PathLabs',
-        initials: 'LP',
-        color: 'bg-yellow-600',
-        tag: 'Diagnostics & Labs',
-        logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/ef/Dr_Lal_PathLabs_logo.svg/220px-Dr_Lal_PathLabs_logo.svg.png',
+        name: 'Remedia Pain Relief Clinic',
+        initials: 'RC',
+        color: 'bg-red-600',
+        tag: 'Pain Management',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_of_the_Indian_Red_Cross_Society.svg/200px-Logo_of_the_Indian_Red_Cross_Society.svg.png',
     },
+
     {
-        name: 'MedPlus',
-        initials: 'MP',
-        color: 'bg-orange-600',
-        tag: 'Medicines & Pharmacy',
-        logo: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Medplus_logo.png',
+        name: 'Remedia Pain Relief Clinic',
+        initials: 'RC',
+        color: 'bg-red-600',
+        tag: 'Pain Management',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_of_the_Indian_Red_Cross_Society.svg/200px-Logo_of_the_Indian_Red_Cross_Society.svg.png',
     },
+
     {
-        name: 'Fortis Healthcare',
-        initials: 'FH',
-        color: 'bg-teal-700',
-        tag: 'Home & Physio Care',
-        logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/Fortis_Healthcare_logo.svg',
-    },
+        name: 'Remedia Pain Relief Clinic',
+        initials: 'RC',
+        color: 'bg-red-600',
+        tag: 'Pain Management',
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_of_the_Indian_Red_Cross_Society.svg/200px-Logo_of_the_Indian_Red_Cross_Society.svg.png',
+    }
 ];
 
 const PartnerCard = ({ partner }) => {

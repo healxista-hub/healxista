@@ -59,9 +59,20 @@ const ProfileForm = ({ extraFields = [] }) => {
         setProfile(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+    const validateFile = (file) => {
+        if (file && file.size > MAX_FILE_SIZE) {
+            toast.error(`File size is too large. Maximum allowed size is 2MB.`);
+            return false;
+        }
+        return true;
+    };
+
     const handlePicChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (!validateFile(file)) return;
             setProfilePic(file);
             setPreviewPic(URL.createObjectURL(file));
         }
@@ -70,6 +81,7 @@ const ProfileForm = ({ extraFields = [] }) => {
     const handleCoverChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (!validateFile(file)) return;
             setCoverImage(file);
             setPreviewCover(URL.createObjectURL(file));
         }
@@ -78,6 +90,7 @@ const ProfileForm = ({ extraFields = [] }) => {
     const handleDocChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (!validateFile(file)) return;
             setDocument(file);
         }
     };

@@ -68,24 +68,33 @@ export default function VerifiedProvidersSection({
                                     className="group"
                                 >
                                     <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 border-none ring-1 ring-gray-200">
-                                        <div className="relative h-52 overflow-hidden bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
-                                            {avatarUrl ? (
+                                        <div className="relative h-52 overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+                                            {provider.cover_image_url ? (
                                                 <img
-                                                    src={avatarUrl}
-                                                    alt={provider.name}
-                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                    src={`/uploads/${provider.cover_image_url}`}
+                                                    alt="Cover"
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                                     loading="lazy"
                                                 />
                                             ) : (
-                                                <div className="flex flex-col items-center gap-2 text-red-400">
-                                                    <ProviderIcon className="h-16 w-16 opacity-30" />
-                                                    <span className="text-5xl font-black text-red-200">{provider.name?.charAt(0) || 'P'}</span>
-                                                </div>
+                                                <div className="w-full h-full opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
                                             )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4">
-                                                <div className="text-white">
-                                                    <h3 className="font-bold text-lg leading-tight">{provider.name || provider.ownerName || provider.lab_name}</h3>
-                                                    <p className="text-sm opacity-90">{provider.specialization || provider.vehicleType || provider.accreditation || provider.role_name}</p>
+
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex flex-col justify-end p-4">
+                                                <div className="flex items-end gap-3">
+                                                    <div className="w-16 h-16 rounded-full border-2 border-white shadow-lg overflow-hidden bg-white shrink-0">
+                                                        {avatarUrl ? (
+                                                            <img src={avatarUrl} alt={provider.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-500">
+                                                                <ProviderIcon className="h-8 w-8" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-white mb-1">
+                                                        <h3 className="font-bold text-lg leading-tight">{provider.name || provider.ownerName || provider.lab_name}</h3>
+                                                        <p className="text-sm text-gray-200">{provider.specialization || provider.vehicleType || provider.accreditation || provider.role_name}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <span className="absolute top-3 left-3 px-2.5 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1">
@@ -93,7 +102,7 @@ export default function VerifiedProvidersSection({
                                             </span>
                                             {/* Offline Badge */}
                                             {provider.is_online === false && (
-                                                <span className="absolute top-3 right-3 px-2.5 py-1 bg-gray-500 text-white text-xs font-bold rounded-full shadow-lg">
+                                                <span className="absolute top-3 right-3 px-2.5 py-1 bg-gray-500/90 backdrop-blur text-white text-xs font-bold rounded-full shadow-lg">
                                                     Offline
                                                 </span>
                                             )}
