@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import AdminImage from '@/assets/images/hero/doctor.jpg'; // Generic background
 import TermsModal from '@/components/TermsModal';
 import { Eye, EyeOff } from 'lucide-react';
+import OtpVerificationModal from '@/components/OtpVerificationModal';
 
 const AdminRegister = () => {
     const [name, setName] = useState('');
@@ -18,17 +19,17 @@ const AdminRegister = () => {
     const [accessCode, setAccessCode] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isTermsOpen, setIsTermsOpen] = useState(false);
+    const [showOtpModal, setShowOtpModal] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setLoading(true);
         setError('');
 
-        // Simple mock security check for admin registration (optional, but good practice)
         if (accessCode !== 'HEALXISTA-ADMIN-2026') {
             setError('Invalid Admin Registration Access Code.');
             setLoading(false);
@@ -36,29 +37,52 @@ const AdminRegister = () => {
         }
 
         try {
-            const hostname = window.location.hostname;
-            const role = 'admin'; // Crucial: Set role to admin
-            const res = await fetch(`/api/auth/register`, {
+            const res = await fetch(`/api/auth/send-registration-otp`, {
                 method: 'POST',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password, role }),
+                body: JSON.stringify({ email }),
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                toast.success('Admin Registration Successful!');
-                login(data.user, data.token);
-                setTimeout(() => {
-                    navigate('/admin-dashboard');
-                }, 100);
+                // toast.success('OTP sent to your email!');
+                setShowOtpModal(true);
             } else {
-                setError(data.message || 'Registration failed log');
+                setError(data.message || 'Failed to send OTP');
             }
         } catch (err) {
-            console.error("Registration Error:", err);
-            setError(`Connection Failed: ${err.message}`);
+            setError('Failed to connect to server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (otp) => {
+        setLoading(true);
+        try {
+            const role = 'admin';
+            const res = await fetch(`/api/auth/register`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, role, otp }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setShowOtpModal(false);
+                login(data.user, data.token);
+                // toast.success('Registration Successful');
+                setTimeout(() => {
+                    navigate(role === 'admin' ? '/admin-dashboard' : role === 'user' ? '/dashboard' : '/provider-portal');
+                }, 100);
+            } else {
+                setError(data.message || 'Registration failed');
+            }
+        } catch (err) {
+            setError('Failed to connect to server');
         } finally {
             setLoading(false);
         }
@@ -181,11 +205,21 @@ const AdminRegister = () => {
                         className="w-full h-11 md:h-12 text-base md:text-lg text-white font-bold transition-all duration-300 brand-bg-gradient hover:opacity-90 shadow-xl shadow-red-500/20" 
                         disabled={loading || !termsAccepted}
                     >
-                        {loading ? 'Creating account...' : 'Register Admin'}
+                        {loading ? 'Sending OTP...' : 'Register Admin'}
                     </Button>
                 </form>
 
                 <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+
+                
+                <OtpVerificationModal 
+                    isOpen={showOtpModal} 
+                    onClose={() => setShowOtpModal(false)} 
+                    email={email} 
+                    onVerify={handleVerifyOtp} 
+                    isVerifying={loading}
+                    onResend={() => handleSubmit()}
+                />
 
                 <p className="text-center text-sm text-slate-600 mt-6 pt-4 border-t">
                     Already an admin?{' '}

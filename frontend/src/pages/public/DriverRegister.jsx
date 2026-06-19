@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import AmbulanceImage from '@/assets/images/hero/road.jpg';
 import TermsModal from '@/components/TermsModal';
 import { Eye, EyeOff } from 'lucide-react';
+import OtpVerificationModal from '@/components/OtpVerificationModal';
 
 const DriverRegister = () => {
     const [name, setName] = useState('');
@@ -28,25 +29,48 @@ const DriverRegister = () => {
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isTermsOpen, setIsTermsOpen] = useState(false);
+    const [showOtpModal, setShowOtpModal] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            const hostname = window.location.hostname;
+            const res = await fetch(`/api/auth/send-registration-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // toast.success('OTP sent to your email!');
+                setShowOtpModal(true);
+            } else {
+                setError(data.message || 'Failed to send OTP');
+            }
+        } catch (err) {
+            setError('Failed to connect to server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (otp) => {
+        setLoading(true);
+        try {
             const role = 'driver';
             const res = await fetch(`/api/auth/register`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name,
+                body: JSON.stringify({ name,
                     email,
                     password,
                     role,
@@ -59,17 +83,17 @@ const DriverRegister = () => {
                     city,
                     state,
                     zipCode,
-                    gender
-                }),
+                    gender, otp }),
             });
 
             const data = await res.json();
 
             if (res.ok) {
+                setShowOtpModal(false);
                 login(data.user, data.token);
-                toast.success('Registration Successful');
+                // toast.success('Registration Successful');
                 setTimeout(() => {
-                    navigate('/driver-dashboard');
+                    navigate(role === 'admin' ? '/admin-dashboard' : role === 'user' ? '/dashboard' : '/provider-portal');
                 }, 100);
             } else {
                 setError(data.message || 'Registration failed');
@@ -314,11 +338,21 @@ const DriverRegister = () => {
                         className="w-full h-12 text-lg brand-bg-gradient hover:opacity-90 text-white font-bold transition-all duration-300 mt-2 shadow-xl shadow-red-500/20"
                         disabled={loading}
                     >
-                        {loading ? 'Creating account...' : 'Create Driver Account'}
+                        {loading ? 'Sending OTP...' : 'Create Driver Account'}
                     </Button>
                 </form>
 
                 <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+
+                
+                <OtpVerificationModal 
+                    isOpen={showOtpModal} 
+                    onClose={() => setShowOtpModal(false)} 
+                    email={email} 
+                    onVerify={handleVerifyOtp} 
+                    isVerifying={loading}
+                    onResend={() => handleSubmit()}
+                />
 
                 <p className="text-center text-sm text-gray-700 mt-6">
                     Already have an account?{' '}

@@ -8,7 +8,7 @@ import { logActivity } from '../utils/activityLogger.js';
 import { formatName } from '../utils/nameFormatter.js';
 import crypto from 'crypto';
 import { verifyUser } from '../middleware/authMiddleware.js';
-import { sendPasswordResetEmail, sendWelcomeEmail } from '../utils/emailService.js';
+import { sendPasswordResetEmail, sendWelcomeEmail, sendRegistrationOtp } from '../utils/emailService.js';
 
 const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET;
@@ -44,6 +44,47 @@ const standardizeRole = (role) => {
     }
 };
 
+// Send OTP for Registration
+router.post('/send-registration-otp', authLimiter, [
+    body('email').isEmail().normalizeEmail(),
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: 'Invalid email', errors: errors.array() });
+
+    const { email } = req.body;
+    
+    try {
+        // Check if email already registered
+        const checkUser = await db.query('SELECT * FROM accounts WHERE email = $1', [email]);
+        if (checkUser.rows.length > 0) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60000); // 10 minutes
+
+        // Store OTP
+        await db.query(`
+            INSERT INTO otp_verifications (email, otp, expires_at) 
+            VALUES ($1, $2, $3) 
+            ON CONFLICT (email) 
+            DO UPDATE SET otp = EXCLUDED.otp, expires_at = EXCLUDED.expires_at
+        `, [email, otp, expiresAt]);
+
+        // Send Email
+        const emailSent = await sendRegistrationOtp(email, otp);
+        if (!emailSent) {
+            return res.status(500).json({ message: 'Failed to send OTP email. Please try again.' });
+        }
+
+        res.status(200).json({ message: 'OTP sent to your email successfully.' });
+    } catch (err) {
+        console.error('OTP Generation Error:', err);
+        res.status(500).json({ message: 'Server error generating OTP' });
+    }
+});
+
 // Register
 router.post('/register', authLimiter, [
     body('email').isEmail().normalizeEmail(),
@@ -61,11 +102,16 @@ router.post('/register', authLimiter, [
         ownerName, adminName, vehicleNumber, vehicleType, experience,
         gender, dateOfBirth, bloodGroup, experienceYears, consultationFee,
         operatingHours, facilitiesAvailable, capacity,
-        labName, accreditation, homeSampleCollection, agencyName, servicesOffered
+        labName, accreditation, homeSampleCollection, agencyName, servicesOffered,
+        otp
     } = req.body;
 
     if (!role) {
         return res.status(400).json({ message: 'Role is required' });
+    }
+
+    if (!otp) {
+        return res.status(400).json({ message: 'OTP is required' });
     }
 
     const client = await db.pool.connect();
@@ -78,6 +124,13 @@ router.post('/register', authLimiter, [
         if (checkUser.rows.length > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        // 1.5 Verify OTP
+        const otpCheck = await client.query('SELECT * FROM otp_verifications WHERE email = $1 AND otp = $2 AND expires_at > NOW()', [email, otp]);
+        if (otpCheck.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'Invalid or expired OTP. Please request a new one.' });
         }
 
         // 2. Hash password
@@ -171,6 +224,8 @@ router.post('/register', authLimiter, [
 
         // 8. Assign Role in user_roles
         await client.query('INSERT INTO user_roles (account_id, role_id) VALUES ($1, $2)', [accountId, roleId]);
+
+        await client.query('DELETE FROM otp_verifications WHERE email = $1', [email]);
 
         await client.query('COMMIT');
 

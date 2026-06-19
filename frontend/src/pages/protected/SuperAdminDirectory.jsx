@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, LogOut, Edit, Key, Search, User, Mail, Phone, MapPin, Briefcase, FileText, Activity, Save, X, DownloadCloud, Users as UsersIcon, Stethoscope, ShieldAlert, Clock } from 'lucide-react';
+import { ShieldCheck, LogOut, Edit, Key, Search, User, Mail, Phone, MapPin, Briefcase, FileText, Activity, Save, X, DownloadCloud, Users as UsersIcon, Stethoscope, ShieldAlert, Clock, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ const SuperAdminDirectory = () => {
     // Modals
     const [editUser, setEditUser] = useState(null); // stores full profile data
     const [passwordUser, setPasswordUser] = useState(null);
+    const [deleteUser, setDeleteUser] = useState(null);
 
     // Password form state
     const [newPassword, setNewPassword] = useState('');
@@ -135,6 +136,28 @@ const SuperAdminDirectory = () => {
                 setNewPassword('');
             } else {
                 toast.error('Failed to reset password');
+            }
+        } catch (err) {
+            toast.error('Connection error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteUser) return;
+        setIsSaving(true);
+        try {
+            const res = await fetch(`/api/superadmin/users/${deleteUser.account_id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                toast.success('User permanently deleted');
+                setDeleteUser(null);
+                fetchUsers();
+            } else {
+                toast.error('Failed to delete user');
             }
         } catch (err) {
             toast.error('Connection error');
@@ -284,13 +307,18 @@ const SuperAdminDirectory = () => {
                                             <td className="p-4 text-xs text-slate-500 font-bold">
                                                 {new Date(u.created_at).toLocaleDateString()}
                                             </td>
-                                            <td className="p-4 pr-6 md:pr-8 text-right space-x-2">
-                                                <Button size="sm" variant="outline" className="h-8 rounded-lg border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50" onClick={() => openFullEditModal(u.account_id)} disabled={isSaving}>
-                                                    <Edit className="h-3 w-3 mr-1" /> Edit
-                                                </Button>
-                                                <Button size="sm" variant="outline" className="h-8 rounded-lg border-slate-200 text-slate-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50" onClick={() => setPasswordUser(u)} disabled={isSaving}>
-                                                    <Key className="h-3 w-3 mr-1" /> Key
-                                                </Button>
+                                            <td className="p-4 pr-6 md:pr-8">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button size="sm" variant="outline" className="h-8 px-3 rounded-lg border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 font-medium shadow-sm transition-all" onClick={() => openFullEditModal(u.account_id)} disabled={isSaving} title="Edit User">
+                                                        <Edit className="h-3.5 w-3.5 mr-1.5" /> Edit
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-lg border-slate-200 text-slate-600 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50 shadow-sm transition-all" onClick={() => setPasswordUser(u)} disabled={isSaving} title="Force Reset Password">
+                                                        <Key className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 rounded-lg border-red-200 text-red-600 hover:text-white hover:border-red-600 hover:bg-red-600 shadow-sm transition-all" onClick={() => setDeleteUser(u)} disabled={isSaving} title="Permanently Delete">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -640,6 +668,56 @@ const SuperAdminDirectory = () => {
                                 <Button type="submit" disabled={isSaving} className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold">Set Password</Button>
                             </div>
                         </form>
+                    </motion.div>
+                </motion.div>
+            )}
+            </AnimatePresence>
+
+            {/* Permanent Delete Modal */}
+            <AnimatePresence>
+            {deleteUser && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+                >
+                    <motion.div 
+                        initial={{ scale: 0.95, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.95, y: 20 }}
+                        className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl border border-red-100"
+                    >
+                        <div className="flex flex-col items-center text-center">
+                            <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <AlertTriangle className="h-8 w-8 text-red-600" />
+                            </div>
+                            <h3 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">
+                                Permanently Delete?
+                            </h3>
+                            <p className="text-sm text-slate-500 mb-2 font-medium">
+                                You are about to permanently wipe all data for:
+                            </p>
+                            <div className="bg-slate-50 p-3 rounded-xl w-full mb-6 border border-slate-100">
+                                <p className="font-bold text-slate-800">{deleteUser.first_name} {deleteUser.last_name}</p>
+                                <p className="text-xs text-slate-500">{deleteUser.email}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mt-1">{deleteUser.role_name}</p>
+                            </div>
+                            
+                            <div className="bg-red-50 p-4 rounded-xl text-left border border-red-100 w-full mb-6">
+                                <p className="text-xs text-red-800 font-bold mb-1">WARNING: THIS IS IRREVERSIBLE.</p>
+                                <p className="text-xs text-red-600">This will automatically cascade and delete their profiles, addresses, uploaded documents, and credentials from the database.</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-3">
+                            <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl border-slate-200" onClick={() => setDeleteUser(null)}>
+                                Cancel
+                            </Button>
+                            <Button type="button" disabled={isSaving} onClick={handleDeleteConfirm} className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold flex items-center gap-2 justify-center">
+                                {isSaving ? 'Deleting...' : <><Trash2 className="h-4 w-4" /> Confirm Delete</>}
+                            </Button>
+                        </div>
                     </motion.div>
                 </motion.div>
             )}

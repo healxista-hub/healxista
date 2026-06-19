@@ -13,9 +13,9 @@ const getTransporter = () => {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 5000,
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 15000,
     });
 };
 
@@ -95,6 +95,43 @@ export const sendWelcomeEmail = async (to, name, role) => {
         return true;
     } catch (error) {
         console.error('Error sending welcome email:', error);
+        return false;
+    }
+};
+
+/**
+ * Sends a registration OTP to the user.
+ * 
+ * @param {string} to - The recipient's email address
+ * @param {string} otp - The 6-digit OTP
+ */
+export const sendRegistrationOtp = async (to, otp) => {
+    const transporter = getTransporter();
+
+    const mailOptions = {
+        from: `"Healxista Verification" <${process.env.SMTP_USER || 'noreply@healxista.com'}>`,
+        to: to,
+        subject: 'Your Healxista Registration OTP',
+        html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <h2 style="color: #2b6cb0; text-align: center;">Verify Your Email</h2>
+                <p style="font-size: 16px; color: #333;">Hello,</p>
+                <p style="font-size: 16px; color: #333;">Thank you for starting your registration with Healxista. Please use the following One-Time Password (OTP) to verify your email address:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <span style="background-color: #f4f4f4; color: #2b6cb0; padding: 15px 30px; font-size: 24px; font-weight: bold; border-radius: 5px; display: inline-block; letter-spacing: 5px;">${otp}</span>
+                </div>
+                <p style="font-size: 16px; color: #333;">This OTP is valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+                <p style="font-size: 14px; color: #777; margin-top: 30px; text-align: center;">&copy; ${new Date().getFullYear()} Healxista. All rights reserved.</p>
+            </div>
+        `,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Registration OTP sent to ${to}`);
+        return true;
+    } catch (error) {
+        console.error('Error sending registration OTP:', error);
         return false;
     }
 };

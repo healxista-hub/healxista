@@ -4,6 +4,10 @@ export const formatName = (firstName, lastName, roleName, gender) => {
     let name = `${fName} ${lName}`.trim();
     if (!name) return '';
 
+    // Clean up any existing prefixes to prevent duplicates (e.g. "Mr. Mr. Suman")
+    const prefixesToRemove = /^((Dr|Mr|Mrs|Ms)\.?\s*)+/i;
+    name = name.replace(prefixesToRemove, '').trim();
+
     const role = (roleName || '').toLowerCase();
     const gen = (gender || '').toLowerCase();
 

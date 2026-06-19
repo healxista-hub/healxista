@@ -288,4 +288,19 @@ router.put('/users/:id/full-profile', async (req, res) => {
     }
 });
 
+// DELETE user permanently
+router.delete('/users/:id', async (req, res) => {
+    const accountId = req.params.id;
+    try {
+        const result = await db.query('DELETE FROM accounts WHERE account_id = $1 RETURNING *', [accountId]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'User permanently deleted' });
+    } catch (err) {
+        console.error('SuperAdmin Delete User Error:', err);
+        res.status(500).json({ message: 'Error deleting user from database' });
+    }
+});
+
 export default router;

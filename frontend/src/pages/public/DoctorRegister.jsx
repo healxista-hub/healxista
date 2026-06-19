@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import DoctorImage from '@/assets/images/hero/doctor.jpg';
 import TermsModal from '@/components/TermsModal';
 import { Eye, EyeOff } from 'lucide-react';
+import OtpVerificationModal from '@/components/OtpVerificationModal';
 
 const DoctorRegister = () => {
     const [name, setName] = useState('');
@@ -27,39 +28,64 @@ const DoctorRegister = () => {
     const [consultationFee, setConsultationFee] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isTermsOpen, setIsTermsOpen] = useState(false);
+    const [showOtpModal, setShowOtpModal] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-            const hostname = window.location.hostname;
-            const role = 'doctor';
-            const res = await fetch(`/api/auth/register`, {
+            const res = await fetch(`/api/auth/send-registration-otp`, {
                 method: 'POST',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password, role, specialization, licenseNumber, mobile, gender, address, city, state, zipCode, experienceYears, consultationFee }),
+                body: JSON.stringify({ email }),
             });
 
             const data = await res.json();
 
             if (res.ok) {
+                toast.success('OTP sent to your email!');
+                setShowOtpModal(true);
+            } else {
+                setError(data.message || 'Failed to send OTP');
+            }
+        } catch (err) {
+            setError('Failed to connect to server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (otp) => {
+        setLoading(true);
+        try {
+            const role = 'doctor';
+            const res = await fetch(`/api/auth/register`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, role, specialization, licenseNumber, mobile, gender, address, city, state, zipCode, experienceYears, consultationFee, otp }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setShowOtpModal(false);
                 login(data.user, data.token);
                 toast.success('Registration Successful');
                 setTimeout(() => {
                     navigate('/doctor-dashboard');
                 }, 100);
             } else {
-                setError(data.message || 'Registration failed');
+                toast.error(data.message || 'Registration failed');
             }
         } catch (err) {
-            setError('Failed to connect to server');
+            toast.error('Failed to connect to server');
         } finally {
             setLoading(false);
         }
@@ -202,7 +228,6 @@ const DoctorRegister = () => {
                         </label>
                     </div>
 
-
                     {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
 
                     <Button 
@@ -210,11 +235,20 @@ const DoctorRegister = () => {
                         className={`w-full h-11 md:h-12 text-base md:text-lg text-white font-bold transition-all duration-300 shadow-xl ${termsAccepted ? 'brand-bg-gradient hover:opacity-90 shadow-red-500/20' : 'bg-gray-400 cursor-not-allowed'}`}
                         disabled={loading || !termsAccepted}
                     >
-                        {loading ? 'Creating account...' : 'Register as Doctor'}
+                        {loading ? 'Sending OTP...' : 'Register as Doctor'}
                     </Button>
                 </form>
 
                 <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+
+                <OtpVerificationModal 
+                    isOpen={showOtpModal} 
+                    onClose={() => setShowOtpModal(false)} 
+                    email={email} 
+                    onVerify={handleVerifyOtp} 
+                    isVerifying={loading}
+                    onResend={() => handleSubmit()}
+                />
 
                 <p className="text-center text-sm text-gray-700 mt-6">
                     Already have an account?{' '}

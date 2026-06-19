@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import TermsModal from '@/components/TermsModal';
 import { Eye, EyeOff } from 'lucide-react';
+import OtpVerificationModal from '@/components/OtpVerificationModal';
 
 
 const HomeCareRegister = () => {
@@ -26,25 +27,48 @@ const HomeCareRegister = () => {
     const [experienceYears, setExperienceYears] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isTermsOpen, setIsTermsOpen] = useState(false);
+    const [showOtpModal, setShowOtpModal] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
+            const res = await fetch(`/api/auth/send-registration-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // toast.success('OTP sent to your email!');
+                setShowOtpModal(true);
+            } else {
+                setError(data.message || 'Failed to send OTP');
+            }
+        } catch (err) {
+            setError('Failed to connect to server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async (otp) => {
+        setLoading(true);
+        try {
             const role = 'home_care';
-            // Send agencyName as 'name' for simplicity in backend logic
             const res = await fetch(`/api/auth/register`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: agencyName, 
+                body: JSON.stringify({ name: agencyName, 
                     ownerName, 
                     email, 
                     password, 
@@ -57,17 +81,17 @@ const HomeCareRegister = () => {
                     zipCode,
                     agencyName,
                     servicesOffered,
-                    experienceYears 
-                }),
+                    experienceYears, otp }),
             });
 
             const data = await res.json();
 
             if (res.ok) {
+                setShowOtpModal(false);
                 login(data.user, data.token);
-                toast.success('Registration Successful');
+                // toast.success('Registration Successful');
                 setTimeout(() => {
-                    navigate('/home-care-dashboard');
+                    navigate(role === 'admin' ? '/admin-dashboard' : role === 'user' ? '/dashboard' : '/provider-portal');
                 }, 100);
             } else {
                 setError(data.message || 'Registration failed');
@@ -207,11 +231,21 @@ const HomeCareRegister = () => {
                         className="w-full h-11 md:h-12 text-base md:text-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all duration-300 shadow-xl shadow-indigo-500/20" 
                         disabled={loading}
                     >
-                        {loading ? 'Creating account...' : 'Register as Caregiver'}
+                        {loading ? 'Sending OTP...' : 'Register as Caregiver'}
                     </Button>
                 </form>
 
                 <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+
+                
+                <OtpVerificationModal 
+                    isOpen={showOtpModal} 
+                    onClose={() => setShowOtpModal(false)} 
+                    email={email} 
+                    onVerify={handleVerifyOtp} 
+                    isVerifying={loading}
+                    onResend={() => handleSubmit()}
+                />
 
                 <p className="text-center text-sm text-gray-700 mt-6">
                     Already have an account?{' '}

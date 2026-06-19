@@ -21,6 +21,14 @@ CREATE TABLE IF NOT EXISTS accounts (
     deleted_at TIMESTAMP NULL
 );
 
+CREATE TABLE IF NOT EXISTS otp_verifications (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    otp VARCHAR(10) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 3. Profiles
 CREATE TABLE IF NOT EXISTS profiles (
     profile_id SERIAL PRIMARY KEY,
