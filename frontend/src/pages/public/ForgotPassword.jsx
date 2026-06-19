@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, Loader } from 'lucide-react';
 import { toast } from 'sonner';
+import logo from '@/assets/logo.png';
+import TechBgImage from '@/assets/images/hero/tech-bg.png';
+import { motion } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -36,11 +41,35 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden p-8 border border-gray-100">
-                <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-[#1e293b] mb-2">Forgot Password?</h2>
-                    <p className="text-[#64748b]">
+        <div
+            className="min-h-screen flex items-center justify-center relative bg-gray-100 p-4"
+            style={{
+                backgroundImage: `url(${TechBgImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/50"></div>
+
+            <motion.div
+                initial={{ opacity: 0, y: -30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="relative w-full max-w-sm glass-card p-8 rounded-3xl z-10 border border-white/40"
+            >
+                <div className="text-center mb-6">
+                    <Link
+                        to="/"
+                        className="inline-flex items-center gap-2 font-black text-2xl justify-center"
+                    >
+                        <img src={logo} alt="Healxista" className="h-9 w-auto drop-shadow-sm" />
+                        <span className="brand-text-gradient">Healxista</span>
+                    </Link>
+                    <h2 className="text-2xl font-bold tracking-tight text-gray-900 mt-4 mb-2">
+                        Forgot Password?
+                    </h2>
+                    <p className="text-sm text-gray-700">
                         {isSent 
                             ? "Check your email for the reset link." 
                             : "Enter your registered email address and we'll send you a link to reset your password."}
@@ -48,54 +77,54 @@ const ForgotPassword = () => {
                 </div>
 
                 {!isSent ? (
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-[#475569] mb-2">
-                                Email Address
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Email
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <Input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2b6cb0] focus:border-transparent outline-none transition-all"
-                                    placeholder="Enter your email"
+                                    className="h-9 pl-10"
+                                    placeholder="user@example.com"
                                 />
                             </div>
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
                             disabled={loading || !email}
-                            className="w-full py-3 px-4 bg-[#2b6cb0] hover:bg-[#2b6cb0]/90 text-white rounded-xl font-medium transition-all shadow-lg shadow-[#2b6cb0]/20 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full h-11 md:h-12 text-base md:text-lg brand-bg-gradient hover:opacity-90 text-white font-bold transition-all duration-300 shadow-xl shadow-red-500/20"
                         >
                             {loading ? (
                                 <Loader className="animate-spin" size={20} />
                             ) : (
                                 <span>Send Reset Link</span>
                             )}
-                        </button>
+                        </Button>
                     </form>
                 ) : (
                     <div className="text-center">
                         <button
                             onClick={() => setIsSent(false)}
-                            className="text-[#2b6cb0] font-medium hover:underline mb-4"
+                            className="text-red-600 font-medium hover:underline mb-4 text-sm"
                         >
                             Try another email address
                         </button>
                     </div>
                 )}
 
-                <div className="mt-8 text-center">
-                    <Link to="/login" className="inline-flex items-center text-[#64748b] hover:text-[#2b6cb0] transition-colors font-medium">
-                        <ArrowLeft size={16} className="mr-2" />
+                <p className="text-center text-sm text-gray-700 mt-6">
+                    <Link to="/login" className="inline-flex items-center text-red-600 hover:underline font-medium">
+                        <ArrowLeft size={14} className="mr-1" />
                         Back to Login
                     </Link>
-                </div>
-            </div>
+                </p>
+            </motion.div>
         </div>
     );
 };

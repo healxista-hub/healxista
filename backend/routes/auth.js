@@ -8,7 +8,7 @@ import { logActivity } from '../utils/activityLogger.js';
 import { formatName } from '../utils/nameFormatter.js';
 import crypto from 'crypto';
 import { verifyUser } from '../middleware/authMiddleware.js';
-import { sendPasswordResetEmail } from '../utils/emailService.js';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../utils/emailService.js';
 
 const router = express.Router();
 const SECRET_KEY = process.env.JWT_SECRET;
@@ -196,6 +196,9 @@ router.post('/register', authLimiter, [
 
         const formattedName = formatName(firstName, lastName, roleName, gender) || name;
 
+        // Send Welcome Email asynchronously so it doesn't block the response
+        sendWelcomeEmail(email, name || formattedName || 'User', roleName).catch(err => console.error("Welcome email failed", err));
+
         res.status(201).json({ 
             message: 'User registered successfully', 
             user: { id: accountId, name: formattedName, email, role: roleName, customId } 
@@ -349,8 +352,7 @@ router.post('/forgot-password', authLimiter, [
         const account = result.rows[0];
 
         if (!account) {
-            // Return success even if account not found to prevent email enumeration
-            return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+            return res.status(404).json({ message: 'You are not a registered user.' });
         }
 
         // Generate token
@@ -379,7 +381,7 @@ router.post('/forgot-password', authLimiter, [
             return res.status(500).json({ message: 'Failed to send password reset email. Please try again later.' });
         }
 
-        res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+        res.json({ message: 'Password reset link has been sent to your email.' });
     } catch (error) {
         console.error('Forgot Password Error:', error);
         res.status(500).json({ message: 'Server error during password reset request' });

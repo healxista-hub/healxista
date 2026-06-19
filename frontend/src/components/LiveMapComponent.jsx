@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -62,12 +62,7 @@ const hospitalIcon = new L.Icon({
 });
 
 /* ---------------- CONSTANTS ---------------- */
-const defaultLoc = [23.3279, 86.3533]; // Purulia HQ Area
-const HOSPITALS = [
-    { id: 1, name: 'Purulia Sadar Hospital', position: [23.3323, 86.3657] },
-    { id: 2, name: 'Deben Mahata Medical College', position: [23.3320, 86.3640] },
-    { id: 3, name: 'Raghunathpur Sub-Divisional Hospital', position: [23.5414, 86.6719] }
-];
+const defaultLoc = [23.3279, 86.3533]; // Fallback while fetching GPS
 
 // Helper to update map center
 const MapUpdater = ({ center }) => {
@@ -91,6 +86,9 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
     // Routing State
     const [routePath, setRoutePath] = useState([]);
     const [routeInfo, setRouteInfo] = useState({ distance: 0, duration: 0 });
+
+    const lastEmitTimeRef = useRef(0);
+    const lastFetchTimeRef = useRef(0);
 
     // Sync sharing state with backend
     const handleToggleSharing = async (val) => {
@@ -127,19 +125,24 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                 const newPos = [latitude, longitude];
                 setMyPosition(newPos);
 
-                // Publish Location via Socket ONLY if sharing is ON or if user has active bookings or is admin
-                if (socket && user && (isSharingLocation || (activeBookings && activeBookings.length > 0) || viewMode === 'admin')) {
-                    const payload = {
-                        id: user.id,
-                        name: user.name,
-                        position: newPos,
-                        status: user.role === 'driver' ? status : 'Online',
-                        role: user.role,
-                        activeBookings: activeBookings,
-                        vehicleNumber: user.vehicleNumber || 'Unknown'
-                    };
+                // Publish Location via Socket
+                // Throttle socket emits to every 5 seconds to prevent hanging/lag
+                const now = Date.now();
+                if (now - lastEmitTimeRef.current > 5000) {
+                    if (socket && user && (isSharingLocation || (activeBookings && activeBookings.length > 0) || viewMode === 'admin')) {
+                        const payload = {
+                            id: user.id,
+                            name: user.name,
+                            position: newPos,
+                            status: user.role === 'driver' ? status : 'Online',
+                            role: user.role,
+                            activeBookings: activeBookings,
+                            vehicleNumber: user.vehicleNumber || 'Unknown'
+                        };
 
-                    socket.emit('update_location', payload);
+                        socket.emit('update_location', payload);
+                        lastEmitTimeRef.current = now;
+                    }
                 }
             },
             (err) => {
@@ -169,23 +172,36 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
             // Filtering Visibility Logic
             const role = String(data.role).toLowerCase();
             let shouldShow = false;
+
             if (viewMode === 'admin') {
                 shouldShow = true; // Admin sees everyone sharing
             } else if (viewMode === 'driver') {
-                // Driver sees their booked user
-                shouldShow = activeBookings.some(bid => data.activeBookings?.includes(bid)) && (role === 'user' || role === 'patient');
-            } else if (viewMode === 'user') {
-                // User sees all available ambulances
-                if (role === 'driver' && (data.status === 'Available' || data.status === 'Online')) {
-                    shouldShow = true;
+                // Driver sees their booked user ONLY
+                if (activeBookings && activeBookings.length > 0) {
+                    shouldShow = activeBookings.some(bid => data.activeBookings?.includes(bid)) && (role === 'user' || role === 'patient');
+                } else {
+                    shouldShow = false;
                 }
-                // User sees their booked ambulance
-                if (role === 'driver' && activeBookings.some(bid => data.activeBookings?.includes(bid))) {
-                    shouldShow = true;
+            } else if (viewMode === 'user') {
+                const hasActiveBookings = activeBookings && activeBookings.length > 0;
+                if (hasActiveBookings) {
+                    // User sees ONLY their booked ambulance
+                    if (role === 'driver' && activeBookings.some(bid => data.activeBookings?.includes(bid))) {
+                        shouldShow = true;
+                    }
+                } else {
+                    // User sees all available ambulances
+                    if (role === 'driver' && (data.status === 'Available' || data.status === 'Online')) {
+                        shouldShow = true;
+                    }
                 }
             }
 
-            if (!shouldShow) return;
+            if (!shouldShow) {
+                // If they shouldn't be shown, remove them from active locations if they exist
+                setActiveLocations(prev => prev.filter(l => !(l.id === data.id && l.role === data.role)));
+                return;
+            }
 
             setActiveLocations(prev => {
                 const updated = [...prev];
@@ -231,21 +247,29 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
             }
         };
 
-        // Define tracking target based on role
-        if (viewMode === 'user' && activeLocations.length > 0) {
-            // User tracking specific or nearest ambulance (Simplification: track first active)
-            const target = activeLocations.find(l => l.role === 'driver' && (l.status === 'Busy' || l.status === 'Available'));
-            if (target && myPosition) fetchRoute(myPosition, target.position);
-        } else if (viewMode === 'driver' && activeLocations.length > 0) {
-            // Driver tracking a user (Simplification: track first user found)
-            const target = activeLocations.find(l => l.role === 'user');
-            if (target && myPosition) fetchRoute(myPosition, target.position);
+        // Define tracking target based on role ONLY when there is an active booking
+        let target = null;
+        if (activeBookings && activeBookings.length > 0) {
+            if (viewMode === 'user') {
+                target = activeLocations.find(l => l.role === 'driver' && activeBookings.some(bid => l.activeBookings?.includes(bid)));
+            } else if (viewMode === 'driver') {
+                target = activeLocations.find(l => (l.role === 'user' || l.role === 'patient') && activeBookings.some(bid => l.activeBookings?.includes(bid)));
+            }
+        }
+
+        if (target && myPosition) {
+            const now = Date.now();
+            // Throttle OSRM requests to every 10 seconds to prevent hanging and API rate limits
+            if (now - lastFetchTimeRef.current > 10000) {
+                fetchRoute(myPosition, target.position);
+                lastFetchTimeRef.current = now;
+            }
         } else {
             setRoutePath([]); // Clear if no active tracking
             setRouteInfo({ distance: 0, duration: 0 });
         }
 
-    }, [myPosition, activeLocations, viewMode]);
+    }, [myPosition, activeLocations, viewMode, activeBookings]);
 
 
     // 4. Unified Tracking
@@ -361,12 +385,6 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                                 );
                             })}
 
-                            {/* HOSPITALS */}
-                            {HOSPITALS.map(h => (
-                                <Marker key={h.id} position={h.position} icon={hospitalIcon}>
-                                    <Popup><p className="font-bold text-green-700">{h.name}</p></Popup>
-                                </Marker>
-                            ))}
                         </MapContainer>
                     </div>
                 </CardContent>
