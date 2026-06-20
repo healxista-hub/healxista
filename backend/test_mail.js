@@ -15,7 +15,10 @@ async function testMail() {
         greetingTimeout: 5000,
         socketTimeout: 5000,
         debug: true,
-        logger: true
+        logger: true,
+        tls: {
+            rejectUnauthorized: false
+        }
     });
 
     try {
