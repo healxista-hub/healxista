@@ -122,6 +122,7 @@ const AdminContactMessages = lazy(() => import('./pages/protected/AdminContactMe
 const AdminQuickBookings = lazy(() => import('./pages/protected/AdminQuickBookings'));
 const AdminResidents = lazy(() => import('./pages/protected/AdminResidents'));
 
+
 // Shared Protected
 const Documents = lazy(() => import('./pages/protected/Documents'));
 
@@ -131,15 +132,68 @@ import PublicRoute from './components/PublicRoute';
 import DashboardLayout from './layout/DashboardLayout';
 import WebsiteLayout from './layout/WebsiteLayout';
 import LiveMapComponent from './components/LiveMapComponent';
+import { fetchApi } from '@/utils/api';
 
 const LiveMapRouteWrapper = () => {
     const { user } = useAuth();
+    const [activeBookings, setActiveBookings] = useState([]);
+
+    useEffect(() => {
+        let intervalId;
+
+        const loadActiveBookings = async () => {
+            try {
+                if (!user) return;
+                
+                const normalizedRole = user.role?.toLowerCase() || '';
+                
+                // Super Admin is no longer allowed to view the live map
+                if (['super admin', 'super_admin'].includes(normalizedRole)) {
+                    return; // Will be redirected below
+                }
+
+                if (normalizedRole === 'admin') {
+                    setActiveBookings([]);
+                    return;
+                }
+
+                const endpoint = normalizedRole === 'driver' ? '/api/bookings/assigned' : '/api/bookings';
+                const data = await fetchApi(endpoint);
+                
+                if (data && Array.isArray(data)) {
+                    const active = data.filter(b => 
+                        ['Accepted', 'Booking Accepted', 'Slot and Time Given', 'Arriving', 'On the Way'].includes(b.status)
+                    );
+                    setActiveBookings(active.map(b => b.booking_id));
+                }
+            } catch (err) {
+                console.error("Failed to fetch active bookings for live map", err);
+            }
+        };
+
+        if (user) {
+            loadActiveBookings();
+            intervalId = setInterval(loadActiveBookings, 10000);
+        }
+
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [user]);
+
     if (!user) return <Navigate to="/" replace />;
-    const normalizedRole = user.role?.toLowerCase();
+    const normalizedRole = user.role?.toLowerCase() || '';
+
+    // Prevent Super Admin from accessing the live map page manually
+    if (['super admin', 'super_admin'].includes(normalizedRole)) {
+        return <Navigate to="/super-admin-dashboard" replace />;
+    }
+
     let mode = 'user';
-    if (normalizedRole === 'admin' || normalizedRole === 'super admin' || normalizedRole === 'super_admin') mode = 'admin';
+    if (normalizedRole === 'admin') mode = 'admin';
     else if (normalizedRole === 'driver') mode = 'driver';
-    return <LiveMapComponent viewMode={mode} />;
+    
+    return <LiveMapComponent viewMode={mode} activeBookings={activeBookings} />;
 };
 
 const App = () => {

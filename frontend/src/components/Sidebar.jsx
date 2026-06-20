@@ -117,7 +117,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             case 'super_admin':
                 return [
                     { name: 'Dashboard', icon: LayoutDashboard, List, path: '/super-admin-dashboard' },
-                    { name: 'Live Map', icon: Map, path: '/map' },
                     { name: 'List Directory', icon: List, path: '/super-admin/directory' },
                     { name: 'Activity Log', icon: FileText, path: '/admin/activity' },
                     { name: 'Settings', icon: Settings, path: '/super-admin/settings' }

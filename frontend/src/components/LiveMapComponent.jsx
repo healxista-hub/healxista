@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
+import BookingModal from '@/components/BookingModal';
 
 /* ---------------- ICON FIX ---------------- */
 delete L.Icon.Default.prototype._getIconUrl;
@@ -38,50 +39,87 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 /* ---------------- CUSTOM ICONS ---------------- */
 const ambulanceIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/883/883398.png',
-    shadowUrl,
-    iconSize: [45, 45],
-    iconAnchor: [22, 45],
-    popupAnchor: [0, -40]
+    iconUrl: '/ambulance-marker.jpg',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [50, 60],
+    iconAnchor: [25, 60],
+    popupAnchor: [0, -55],
+    className: 'drop-shadow-xl animate-pulse'
 });
 
-const userIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/9131/9131529.png',
-    shadowUrl,
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
-});
-
-const hospitalIcon = new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/4320/4320371.png',
-    shadowUrl,
+const userIcon = L.divIcon({
+    html: `
+        <div class="relative flex items-center justify-center">
+            <div class="absolute -inset-3 bg-blue-500/40 rounded-full animate-ping" style="animation-duration: 2s;"></div>
+            <div class="relative bg-white p-2 rounded-full shadow-xl border-2 border-blue-600 z-10 flex items-center justify-center h-10 w-10">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 h-5 w-5">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+        </div>
+    `,
+    className: 'bg-transparent border-0',
     iconSize: [40, 40],
-    iconAnchor: [20, 40],
-    popupAnchor: [0, -40]
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20]
+});
+
+const hospitalIcon = L.divIcon({
+    html: `
+        <div class="relative flex items-center justify-center bg-white p-1.5 rounded-full shadow-xl border-2 border-emerald-600 h-10 w-10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-600 h-6 w-6">
+                <path d="M12 3v18"></path>
+                <path d="M3 12h18"></path>
+                <rect x="2" y="8" width="20" height="8" rx="2"></rect>
+            </svg>
+        </div>
+    `,
+    className: 'bg-transparent border-0',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20]
 });
 
 /* ---------------- CONSTANTS ---------------- */
 const defaultLoc = [23.3279, 86.3533]; // Fallback while fetching GPS
+const defaultBookings = [];
 
-// Helper to update map center
-const MapUpdater = ({ center }) => {
+const AutoFitRoute = ({ routePath }) => {
     const map = useMap();
     useEffect(() => {
-        if (center && center[0] && center[1]) {
-            map.setView(center, map.getZoom(), { animate: true });
+        if (routePath && routePath.length > 0) {
+            const bounds = L.polyline(routePath).getBounds();
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50], animate: true });
+            }
         }
-    }, [center, map]);
+    }, [routePath, map]);
     return null;
 };
 
-const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
+// Helper to update map center only on initial GPS load
+const MapUpdater = ({ center }) => {
+    const map = useMap();
+    const hasCentered = useRef(false);
+    useEffect(() => {
+        if (!hasCentered.current && center && center[0] !== defaultLoc[0] && center[1] !== defaultLoc[1]) {
+            map.setView(center, map.getZoom(), { animate: true });
+            hasCentered.current = true;
+        }
+    }, [center[0], center[1], map]);
+    return null;
+};
+
+const LiveMapComponent = ({ viewMode = 'user', activeBookings = defaultBookings }) => {
     const { user, login } = useAuth();
     const socket = useSocket();
     const [myPosition, setMyPosition] = useState(defaultLoc);
     const [activeLocations, setActiveLocations] = useState([]);
     const [status, setStatus] = useState('Available'); // For Drivers
     const [isSharingLocation, setIsSharingLocation] = useState(user?.isSharingLocation || false);
+    const [selectedAmbulanceForBooking, setSelectedAmbulanceForBooking] = useState(null);
+    const mapRef = useRef(null);
 
     // Routing State
     const [routePath, setRoutePath] = useState([]);
@@ -129,7 +167,15 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                 // Throttle socket emits to every 5 seconds to prevent hanging/lag
                 const now = Date.now();
                 if (now - lastEmitTimeRef.current > 5000) {
-                    if (socket && user && (isSharingLocation || (activeBookings && activeBookings.length > 0) || viewMode === 'admin')) {
+                    const shouldEmit = socket && user && (
+                        isSharingLocation || 
+                        (activeBookings && activeBookings.length > 0) || 
+                        user.role === 'driver' || 
+                        user.role === 'admin' ||
+                        viewMode === 'admin'
+                    );
+
+                    if (shouldEmit) {
                         const payload = {
                             id: user.id,
                             name: user.name,
@@ -265,8 +311,8 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
                 lastFetchTimeRef.current = now;
             }
         } else {
-            setRoutePath([]); // Clear if no active tracking
-            setRouteInfo({ distance: 0, duration: 0 });
+            setRoutePath(prev => prev.length === 0 ? prev : []); // Clear if no active tracking
+            setRouteInfo(prev => prev.distance === 0 && prev.duration === 0 ? prev : { distance: 0, duration: 0 });
         }
 
     }, [myPosition, activeLocations, viewMode, activeBookings]);
@@ -276,44 +322,58 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
     const visibleLocations = activeLocations;
 
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col h-[calc(100vh-120px)] w-full gap-4 pb-4">
             {/* Header / Route Info Card */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 shrink-0 px-1">
                 <div>
-                    <h2 className="text-xl font-bold flex items-center gap-2">
-                        {viewMode === 'admin' && <MapPin className="text-red-600 h-5 w-5" />}
-                        {viewMode === 'driver' && <Ambulance className="text-blue-600 h-5 w-5" />}
-                        {viewMode === 'user' && <User className="text-green-600 h-5 w-5" />}
+                    <h2 className="text-2xl font-black flex items-center gap-2 tracking-tight">
+                        {viewMode === 'admin' && <MapPin className="text-red-600 h-6 w-6" />}
+                        {viewMode === 'driver' && <Ambulance className="text-red-600 h-6 w-6" />}
+                        {viewMode === 'user' && <User className="text-blue-600 h-6 w-6" />}
 
+                        <span className="brand-text-gradient">
                         {viewMode === 'admin' ? 'Fleet Overview' :
                             viewMode === 'driver' ? 'Navigation' :
                                 'Live Tracking'}
+                        </span>
                     </h2>
                 </div>
 
                 {routeInfo.distance > 0 && (
-                    <Card className="bg-blue-600 text-white border-none py-1 px-4 shadow-md">
-                        <div className="flex items-center gap-4 text-sm font-medium">
-                            <span className="flex items-center gap-1"><CornerUpRight className="h-4 w-4" /> {routeInfo.distance} km</span>
-                            <span className="flex items-center gap-1"><Clock className="h-4 w-4" /> {routeInfo.duration} min</span>
+                    <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none py-1.5 px-5 shadow-lg animate-in fade-in slide-in-from-top-4">
+                        <div className="flex items-center gap-6 text-sm font-bold">
+                            <span className="flex items-center gap-1.5"><CornerUpRight className="h-4 w-4 text-blue-200" /> {routeInfo.distance} km</span>
+                            <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-blue-200" /> {routeInfo.duration} min</span>
                         </div>
                     </Card>
                 )}
 
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-3 items-center">
                     {viewMode !== 'admin' && (
-                        <div className="flex items-center gap-2 mr-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition-all hover:border-indigo-300">
-                            <span className="text-xs font-bold text-slate-700">Share Location</span>
-                            <Switch checked={isSharingLocation} onCheckedChange={handleToggleSharing} className="data-[state=checked]:bg-indigo-600 scale-75 origin-right" />
+                        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
+                            <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Share Location</span>
+                            <Switch checked={isSharingLocation} onCheckedChange={handleToggleSharing} className="data-[state=checked]:bg-indigo-600" />
                         </div>
                     )}
-                    <Button variant="outline" size="sm" onClick={() => setMyPosition(defaultLoc)}>
-                        <Navigation className="h-4 w-4" />
+                    <Button 
+                        variant="outline" 
+                        className="bg-white hover:bg-slate-50 border-slate-200 shadow-sm font-bold text-slate-700 flex items-center gap-2"
+                        onClick={() => {
+                            if (mapRef.current) mapRef.current.flyTo(myPosition, 16, { animate: true, duration: 1.5 });
+                        }}
+                    >
+                        <Navigation className="h-4 w-4 text-indigo-600" />
+                        <span className="hidden sm:inline">Recenter</span>
                     </Button>
                     {viewMode === 'user' && (
-                        <Button variant="destructive" size="sm" onClick={() => {
-                            if (socket && user) socket.emit('update_location', { id: user.id, name: user.name, position: myPosition, status: 'Emergency', role: user.role });
-                        }}>
+                        <Button 
+                            variant="destructive" 
+                            className="bg-red-600 hover:bg-red-700 font-bold shadow-md shadow-red-600/20 flex items-center gap-2 animate-pulse"
+                            onClick={() => {
+                                if (socket && user) socket.emit('update_location', { id: user.id, name: user.name, position: myPosition, status: 'Emergency', role: user.role });
+                            }}
+                        >
+                            <AlertTriangle className="h-4 w-4" />
                             SOS
                         </Button>
                     )}
@@ -321,74 +381,111 @@ const LiveMapComponent = ({ viewMode = 'user', activeBookings = [] }) => {
             </div>
 
             {/* MAP */}
-            <Card className="shadow-lg border-0 overflow-hidden">
-                <CardContent className="p-0">
-                    <div className="h-[500px] w-full relative z-0">
-                        <MapContainer
-                            center={myPosition}
-                            zoom={13}
-                            className="h-full w-full"
-                        >
-                            <TileLayer
-                                attribution="&copy; Google Maps"
-                                url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+            <Card className="flex-1 shadow-2xl border-0 overflow-hidden rounded-2xl relative ring-1 ring-slate-900/5">
+                <CardContent className="p-0 h-full w-full">
+                    <MapContainer
+                        ref={mapRef}
+                        center={myPosition}
+                        zoom={13}
+                        className="h-full w-full z-0"
+                        zoomControl={false}
+                    >
+                        <TileLayer
+                            attribution="&copy; Google Maps"
+                            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                        />
+                        {/* Auto fit bounds when route exists */}
+                        <AutoFitRoute routePath={routePath} />
+                        
+                        {/* Center on load */}
+                        <MapUpdater center={myPosition} />
+
+                        {/* ROUTE LINE (Animated Dashed Line) */}
+                        {routePath.length > 0 && (
+                            <Polyline 
+                                positions={routePath} 
+                                color="#2563eb" 
+                                weight={6} 
+                                opacity={0.8} 
+                                dashArray="10, 15"
+                                className="animate-[dash_20s_linear_infinite]"
                             />
-                            <MapUpdater center={myPosition} />
+                        )}
 
-                            {/* ROUTE LINE (Blue) */}
-                            {routePath.length > 0 && (
-                                <Polyline positions={routePath} color="#2563eb" weight={5} opacity={0.7} />
-                            )}
+                        {/* CURRENT USER MARKER */}
+                        {viewMode !== 'admin' && (
+                            <Marker position={myPosition} icon={viewMode === 'driver' ? ambulanceIcon : userIcon} zIndexOffset={1000}>
+                                <Popup className="rounded-xl overflow-hidden border-0 shadow-2xl">
+                                    <div className="p-2 min-w-[180px]">
+                                        <p className="font-black text-lg mb-2 text-slate-900 border-b pb-2">{viewMode === 'driver' ? '🚑 You (Ambulance)' : '👤 You (User)'}</p>
+                                        <div className="text-sm space-y-1.5 text-slate-700">
+                                            <p><span className="font-bold text-slate-900">Name:</span> {user?.name}</p>
+                                            {viewMode === 'driver' && user?.vehicleNumber && <p><span className="font-bold text-slate-900">Vehicle:</span> {user.vehicleNumber}</p>}
+                                            <p><span className="font-bold text-slate-900">Status:</span> <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-md">{user?.role === 'driver' ? status : 'Online'}</span></p>
+                                        </div>
+                                    </div>
+                                </Popup>
+                            </Marker>
+                        )}
 
-                            {/* CURRENT USER MARKER */}
-                            {viewMode !== 'admin' && (
-                                <Marker position={myPosition} icon={viewMode === 'driver' ? ambulanceIcon : userIcon}>
-                                    <Popup>
-                                            <div className="p-1 min-w-[150px]">
-                                                <p className="font-bold text-lg mb-1">{viewMode === 'driver' ? '🚑 You (Ambulance)' : '👤 You (User)'}</p>
-                                                <div className="text-sm space-y-1">
-                                                    <p><span className="font-semibold">Name:</span> {user?.name}</p>
-                                                    {viewMode === 'driver' && user?.vehicleNumber && <p><span className="font-semibold">Vehicle:</span> {user.vehicleNumber}</p>}
-                                                    <p><span className="font-semibold">Status:</span> {user?.role === 'driver' ? status : 'Online'}</p>
-                                                    <p className="text-xs text-gray-500 mt-2">Lat: {myPosition[0].toFixed(4)}, Lng: {myPosition[1].toFixed(4)}</p>
-                                                </div>
+                        {/* ALL OTHER USERS / PROVIDERS */}
+                        {visibleLocations.map(loc => {
+                            const role = String(loc.role).toLowerCase();
+                            const isAmbulance = role === 'driver';
+                            const isUser = role === 'user' || role === 'patient';
+                            const iconToUse = isAmbulance ? ambulanceIcon : (isUser ? userIcon : hospitalIcon);
+                            const label = isAmbulance ? '🚑 Available Ambulance' : (isUser ? '👤 Emergency Patient' : '🏥 Provider');
+                            const nameLabel = isAmbulance ? 'Driver:' : (isUser ? 'Patient:' : 'Provider:');
+                            const statusColor = (loc.status === 'Emergency' || loc.status === 'Busy') ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50';
+
+                            return (
+                                <Marker key={`${loc.role}-${loc.id}`} position={loc.position} icon={iconToUse}>
+                                    <Popup className="rounded-xl overflow-hidden border-0 shadow-2xl">
+                                        <div className="p-2 min-w-[180px]">
+                                            <p className={`font-black text-lg mb-2 border-b pb-2 ${isAmbulance ? 'text-red-600' : 'text-blue-600'}`}>{label}</p>
+                                            <div className="text-sm space-y-1.5 text-slate-700">
+                                                <p><span className="font-bold text-slate-900">{nameLabel}</span> {loc.name}</p>
+                                                {isAmbulance && loc.vehicleNumber && <p><span className="font-bold text-slate-900">Vehicle:</span> {loc.vehicleNumber}</p>}
+                                                <p><span className="font-bold text-slate-900">Status:</span> <span className={`font-bold px-2 py-0.5 rounded-md ${statusColor}`}>{loc.status}</span></p>
+                                                {loc.mobile && <p><span className="font-bold text-slate-900">Contact:</span> {loc.mobile}</p>}
+                                                
+                                                {/* Booking Button for user viewing an available ambulance */}
+                                                {viewMode === 'user' && isAmbulance && (loc.status === 'Available' || loc.status === 'Online') && (
+                                                    <Button 
+                                                        size="sm" 
+                                                        className="w-full mt-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-bold shadow-md"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedAmbulanceForBooking({
+                                                                id: loc.id,
+                                                                provider_id: loc.id,
+                                                                name: loc.name,
+                                                                vehicleNumber: loc.vehicleNumber
+                                                            });
+                                                        }}
+                                                    >
+                                                        Book This Ambulance
+                                                    </Button>
+                                                )}
                                             </div>
+                                        </div>
                                     </Popup>
                                 </Marker>
-                            )}
+                            );
+                        })}
 
-                            {/* ALL OTHER USERS / PROVIDERS */}
-                            {visibleLocations.map(loc => {
-                                const role = String(loc.role).toLowerCase();
-                                const isAmbulance = role === 'driver';
-                                const isUser = role === 'user' || role === 'patient';
-                                const iconToUse = isAmbulance ? ambulanceIcon : (isUser ? userIcon : hospitalIcon);
-                                const label = isAmbulance ? '🚑 Available Ambulance' : (isUser ? '👤 Emergency Patient' : '🏥 Provider');
-                                const nameLabel = isAmbulance ? 'Driver:' : (isUser ? 'Patient:' : 'Provider:');
-                                const statusColor = (loc.status === 'Emergency' || loc.status === 'Busy') ? 'text-red-600 font-bold' : 'text-green-600';
-
-                                return (
-                                    <Marker key={`${loc.role}-${loc.id}`} position={loc.position} icon={iconToUse}>
-                                        <Popup>
-                                            <div className="p-1 min-w-[150px]">
-                                                <p className={`font-bold text-lg mb-1 ${isAmbulance ? 'text-red-600' : 'text-blue-600'}`}>{label}</p>
-                                                <div className="text-sm space-y-1">
-                                                    <p><span className="font-semibold">{nameLabel}</span> {loc.name}</p>
-                                                    {isAmbulance && loc.vehicleNumber && <p><span className="font-semibold">Vehicle:</span> {loc.vehicleNumber}</p>}
-                                                    <p><span className="font-semibold">Status:</span> <span className={statusColor}>{loc.status}</span></p>
-                                                    {loc.mobile && <p><span className="font-semibold">Contact:</span> {loc.mobile}</p>}
-                                                    <p className="text-xs text-gray-500 mt-2">Lat: {loc.position[0].toFixed(4)}, Lng: {loc.position[1].toFixed(4)}</p>
-                                                </div>
-                                            </div>
-                                        </Popup>
-                                    </Marker>
-                                );
-                            })}
-
-                        </MapContainer>
-                    </div>
+                    </MapContainer>
                 </CardContent>
             </Card>
+
+            {/* Booking Modal */}
+            <BookingModal
+                isOpen={!!selectedAmbulanceForBooking}
+                onClose={() => setSelectedAmbulanceForBooking(null)}
+                preSelectedService="road"
+                provider={selectedAmbulanceForBooking}
+                providerType="default_ambulance"
+            />
         </div>
     );
 };

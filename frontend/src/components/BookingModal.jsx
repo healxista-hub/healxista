@@ -218,7 +218,8 @@ const BookingModal = ({ isOpen, onClose, preSelectedService = 'road', provider =
                     formDataToSend.append('providerId', provider.provider_id || provider.id);
 
                     await axios.post(`/api/bookings`, formDataToSend, { 
-                        headers: { 'Content-Type': 'multipart/form-data' } 
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                        withCredentials: true
                     });
                 } else {
                     // For quick bookings, we currently don't support file upload but could easily add it
@@ -230,7 +231,10 @@ const BookingModal = ({ isOpen, onClose, preSelectedService = 'road', provider =
                         destination: formData.dropLocation,
                         details: formData.additionalNotes
                     };
-                    await axios.post(`/api/quick-bookings`, payload, { headers });
+                    await axios.post(`/api/quick-bookings`, payload, { 
+                        headers,
+                        withCredentials: true
+                    });
                 }
 
                 // Show success message

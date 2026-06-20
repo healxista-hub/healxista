@@ -58,6 +58,15 @@ router.post('/', verifyOptionalUser, upload.single('user_document'), attachRelat
     }
 
     try {
+        let actualProviderId = providerId || null;
+        if (actualProviderId) {
+            // Handle case where frontend might send account_id instead of provider_id
+            const spCheck = await db.query('SELECT provider_id FROM service_providers WHERE provider_id = $1 OR account_id = $1 LIMIT 1', [actualProviderId]);
+            if (spCheck.rows.length > 0) {
+                actualProviderId = spCheck.rows[0].provider_id;
+            }
+        }
+
         const serviceId = await getServiceIdByName(serviceName || 'Ambulance Ride');
         
         const userDocument = req.file ? req.file.relative_path : null;
@@ -72,7 +81,7 @@ router.post('/', verifyOptionalUser, upload.single('user_document'), attachRelat
         
         const values = [
             userId, 
-            providerId || null, 
+            actualProviderId, 
             serviceId || null, 
             bookingType || (serviceName === 'Ambulance Ride' ? 'Ride' : 'Appointment'), 
             scheduledAt || new Date(), 

@@ -283,7 +283,7 @@ router.post('/login', authLimiter, [
     try {
         const result = await db.query(
             `SELECT a.*, r.name as role_name, p.first_name, p.last_name, p.profile_image_url, p.gender, p.is_sharing_location,
-                    d.vehicle_number 
+                    sp.provider_id, d.vehicle_number 
              FROM accounts a 
              JOIN roles r ON a.role_id = r.role_id 
              LEFT JOIN profiles p ON a.account_id = p.account_id 
@@ -317,7 +317,7 @@ router.post('/login', authLimiter, [
         }
 
         const token = jwt.sign(
-            { id: account.account_id, email: account.email, role: account.role_name, customId: account.custom_id }, 
+            { id: account.account_id, email: account.email, role: account.role_name, customId: account.custom_id, providerId: account.provider_id }, 
             SECRET_KEY, 
             { expiresIn: '2h' }
         );
@@ -334,6 +334,7 @@ router.post('/login', authLimiter, [
             message: 'Login successful', 
             user: { 
                 id: account.account_id, 
+                provider_id: account.provider_id,
                 name: formatName(account.first_name, account.last_name, account.role_name, account.gender) || account.email, 
                 email: account.email, 
                 role: account.role_name,
